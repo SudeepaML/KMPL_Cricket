@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+/* Safe area padding for mobile bottom bar */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Hide scrollbar for clean horizontal scroller */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Rich Animated Logo Styles */
+@keyframes kmplFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(1deg);
+  }
+}
+
+@keyframes kmplGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.35), 0 0 30px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.65), 0 0 45px rgba(16, 185, 129, 0.4);
+  }
+}
+
+@keyframes kmplShine {
+  0% {
+    left: -100%;
+  }
+  20%, 100% {
+    left: 200%;
+  }
+}
+
+.animate-kmpl-float {
+  animation: kmplFloat 4s ease-in-out infinite;
+}
+
+.animate-kmpl-glow {
+  animation: kmplGlow 3s ease-in-out infinite;
+}
+
+.kmpl-shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.kmpl-shine-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 80%
+  );
+  transform: rotate(25deg);
+  animation: kmplShine 5s infinite;
+  pointer-events: none;
+}

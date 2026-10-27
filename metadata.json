@@ -1,0 +1,6 @@
+{
+  "name": "KMPL Cricket",
+  "description": "KMPL Cricket (Kagalagere Megala Hatti Premier League) - Transparent finance tracker for village cricket tournament.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
