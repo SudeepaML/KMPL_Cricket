@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { Users, Calendar, CircleDollarSign, BarChart3, MessageSquare, Shield, Megaphone, ChevronUp, BookOpen, ScrollText } from 'lucide-react';
+import { Users, Calendar, CircleDollarSign, BarChart3, MessageSquare, Shield, Megaphone, ChevronUp, ScrollText } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { t } = useLanguage();
