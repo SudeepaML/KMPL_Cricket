@@ -74,25 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
                 </div>
               </div>
             </div>
-            <div className="relative group">
-              <button type="button" className="px-3 py-2 rounded-lg hover:bg-emerald-800/80 dark:hover:bg-slate-800 font-bold">Admin Portal ▾</button>
-              <div className="hidden group-hover:block group-focus-within:block absolute right-0 top-full pt-2 w-60 z-50">
-                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-xl">
-                  {isAdmin ? (
-                    <>
-                      <Link to="/admin" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Admin Dashboard</Link>
-                      <Link to="/admin/collect" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Monthly Fund</Link>
-                      <Link to="/admin/baddi" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Baddi Chitti</Link>
-                      <Link to="/admin/players" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Manage Players</Link>
-                      <Link to="/admin/admins" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Manage Admins</Link>
-                      <Link to="/admin/rules" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Tournament Rules</Link>
-                    </>
-                  ) : (
-                    <Link to="/admin/login" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Admin Portal Login</Link>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Link to="/admin/login" className="px-3 py-2 rounded-lg hover:bg-emerald-800/80 dark:hover:bg-slate-800 font-bold">Admin Portal</Link>
           </nav>
           {/* Zone 3: Actions (Announcements beside Rules, Guide, Developer Profile, DB Settings, Theme, Language, Admin) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
