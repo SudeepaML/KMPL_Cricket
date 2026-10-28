@@ -87,3 +87,22 @@ export interface FundRule {
 
 export type Language = 'en' | 'kn';
 
+export interface ChatMessage {
+  id: string;
+  sender_name: string;
+  sender_kmpl_id: string;
+  is_admin: boolean;
+  message: string;
+  created_at: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  posted_by: string;
+  is_pinned: boolean;
+  created_at: string;
+}
+
+

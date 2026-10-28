@@ -81,6 +81,37 @@ export interface TranslationDictionary {
   sendEmailOtp: string;
   emailOtpNotice: string;
   checkInboxMessage: string;
+  chat: string;
+  chatSubtitle: string;
+  noMessagesYet: string;
+  typeMessagePlaceholder: string;
+  send: string;
+  waitCooldown: string;
+  loginToChat: string;
+  identifyAsPlayer: string;
+  selectYourPlayer: string;
+  changePlayer: string;
+  deleteMessage: string;
+  deleteConfirm: string;
+  adminBadge: string;
+  announcements: string;
+  announcementsSubtitle: string;
+  noAnnouncementsYet: string;
+  newAnnouncement: string;
+  postAnnouncement: string;
+  announcementTitle: string;
+  announcementBody: string;
+  titlePlaceholder: string;
+  bodyPlaceholder: string;
+  pinAnnouncement: string;
+  unpinAnnouncement: string;
+  pinnedNotice: string;
+  deleteAnnouncement: string;
+  deleteAnnouncementConfirm: string;
+  postedBy: string;
+  announcementPostedSuccess: string;
+  viewAllAnnouncements: string;
+  latestAnnouncement: string;
 }
 
 export const translations: Record<'en' | 'kn', TranslationDictionary> = {
@@ -159,6 +190,37 @@ export const translations: Record<'en' | 'kn', TranslationDictionary> = {
     sendEmailOtp: "Send OTP to Email",
     emailOtpNotice: "Supabase Email OTP Authentication",
     checkInboxMessage: "Check your email inbox for the 6-digit OTP code sent via Supabase.",
+    chat: "Community Chat",
+    chatSubtitle: "Official village tournament discussion, banter & player updates",
+    noMessagesYet: "No messages yet. Say hello!",
+    typeMessagePlaceholder: "Type a message (max 500 characters)...",
+    send: "Send",
+    waitCooldown: "Wait",
+    loginToChat: "Sign in as a Player or Admin to participate in the chat",
+    identifyAsPlayer: "Identify as Player",
+    selectYourPlayer: "Select Your Player Profile",
+    changePlayer: "Change Player",
+    deleteMessage: "Delete Message",
+    deleteConfirm: "Are you sure you want to delete this message as an admin?",
+    adminBadge: "Admin",
+    announcements: "Announcements",
+    announcementsSubtitle: "Official tournament notices, ground updates, and schedules",
+    noAnnouncementsYet: "No announcements yet.",
+    newAnnouncement: "New Announcement",
+    postAnnouncement: "Publish Announcement",
+    announcementTitle: "Announcement Title",
+    announcementBody: "Announcement Details",
+    titlePlaceholder: "e.g., Match schedule updated or kit distribution...",
+    bodyPlaceholder: "Enter complete announcement details (max 1000 characters)...",
+    pinAnnouncement: "Pin Announcement",
+    unpinAnnouncement: "Unpin",
+    pinnedNotice: "Pinned Announcement",
+    deleteAnnouncement: "Delete Announcement",
+    deleteAnnouncementConfirm: "Are you sure you want to delete this announcement? This action cannot be undone.",
+    postedBy: "Posted by",
+    announcementPostedSuccess: "Announcement published successfully!",
+    viewAllAnnouncements: "View All Announcements",
+    latestAnnouncement: "Latest Announcement",
   },
   kn: {
     appTitle: "ಕೆಎಂಪಿಎಲ್ ಕ್ರಿಕೆಟ್",
@@ -235,5 +297,36 @@ export const translations: Record<'en' | 'kn', TranslationDictionary> = {
     sendEmailOtp: "ಇಮೇಲ್‌ಗೆ ಒಟಿಪಿ ಕಳುಹಿಸಿ",
     emailOtpNotice: "ಸುಪಬೇಸ್ ಇಮೇಲ್ ಒಟಿಪಿ ದೃಢೀಕರಣ",
     checkInboxMessage: "ಸುಪಬೇಸ್ ಮೂಲಕ ನಿಮ್ಮ ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಲಾದ 6-ಅಂಕಿಯ ಒಟಿಪಿ ಕೋಡ್ ಪರಿಶೀಲಿಸಿ.",
+    chat: "ಸಮುದಾಯ ಚಾಟ್",
+    chatSubtitle: "ಅಧಿಕೃತ ಗ್ರಾಮ ಕ್ರಿಕೆಟ್ ಟೂರ್ನಮೆಂಟ್ ಚರ್ಚೆ ಮತ್ತು ಆಟಗಾರರ ಲೈವ್ ಸಂದೇಶಗಳು",
+    noMessagesYet: "No messages yet. Say hello!",
+    typeMessagePlaceholder: "ಸಂದೇಶ ಬರೆಯಿರಿ (ಗರಿಷ್ಠ 500 ಅಕ್ಷರಗಳು)...",
+    send: "ಕಳುಹಿಸಿ",
+    waitCooldown: "ನಿರೀಕ್ಷಿಸಿ",
+    loginToChat: "ಚಾಟ್‌ನಲ್ಲಿ ಭಾಗವಹಿಸಲು ಆಟಗಾರ ಅಥವಾ ಅಡ್ಮಿನ್ ಆಗಿ ಲಾಗಿನ್ ಆಗಿ",
+    identifyAsPlayer: "ಆಟಗಾರರಾಗಿ ಪ್ರವೇಶಿಸಿ",
+    selectYourPlayer: "ನಿಮ್ಮ ಆಟಗಾರ ಪ್ರೊಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ",
+    changePlayer: "ಆಟಗಾರರನ್ನು ಬದಲಾಯಿಸಿ",
+    deleteMessage: "ಸಂದೇಶ ಅಳಿಸಿ",
+    deleteConfirm: "ಅಡ್ಮಿನ್ ಆಗಿ ಈ ಸಂದೇಶವನ್ನು ಖಚಿತವಾಗಿ ಅಳಿಸಬೇಕೆ?",
+    adminBadge: "ಅಡ್ಮಿನ್",
+    announcements: "ಪ್ರಕಟಣೆಗಳು",
+    announcementsSubtitle: "ಅಧಿಕೃತ ಟೂರ್ನಮೆಂಟ್ ಪ್ರಕಟಣೆಗಳು, ಮೈದಾನ ಮಾಹಿತಿ ಮತ್ತು ವೇಳಾಪಟ್ಟಿ",
+    noAnnouncementsYet: "No announcements yet.",
+    newAnnouncement: "ಹೊಸ ಪ್ರಕಟಣೆ",
+    postAnnouncement: "ಪ್ರಕಟಣೆ ಪ್ರಕಟಿಸಿ",
+    announcementTitle: "ಪ್ರಕಟಣೆಯ ಶೀರ್ಷಿಕೆ",
+    announcementBody: "ಪ್ರಕಟಣೆಯ ವಿವರಗಳು",
+    titlePlaceholder: "ಉದಾಹರಣೆಗೆ, ಪಂದ್ಯ ವೇಳಾಪಟ್ಟಿ ಬದಲಾವಣೆ ಅಥವಾ ಕಿಟ್ ವಿತರಣೆ...",
+    bodyPlaceholder: "ಸಂಪೂರ್ಣ ಪ್ರಕಟಣೆ ವಿವರಗಳನ್ನು ನಮೂದಿಸಿ (ಗರಿಷ್ಠ 1000 ಅಕ್ಷರಗಳು)...",
+    pinAnnouncement: "ಪಿನ್ ಮಾಡಿ",
+    unpinAnnouncement: "ಅನ್‌ಪಿನ್ ಮಾಡಿ",
+    pinnedNotice: "ಪಿನ್ ಮಾಡಲಾದ ಪ್ರಕಟಣೆ",
+    deleteAnnouncement: "ಪ್ರಕಟಣೆ ಅಳಿಸಿ",
+    deleteAnnouncementConfirm: "ಈ ಪ್ರಕಟಣೆಯನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ? ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ.",
+    postedBy: "ಪ್ರಕಟಿಸಿದವರು",
+    announcementPostedSuccess: "ಪ್ರಕಟಣೆಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಪ್ರಕಟಿಸಲಾಗಿದೆ!",
+    viewAllAnnouncements: "ಎಲ್ಲಾ ಪ್ರಕಟಣೆಗಳನ್ನು ನೋಡಿ",
+    latestAnnouncement: "ಇತ್ತೀಚಿನ ಪ್ರಕಟಣೆ",
   }
 };

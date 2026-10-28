@@ -15,6 +15,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useRealtimeData } from '../hooks/useRealtimeData';
 import { useLanguage } from '../context/LanguageContext';
 import { Player } from '../types';
@@ -23,9 +24,10 @@ import { DeveloperProfileModal } from '../components/DeveloperProfileModal';
 import { AlphabeticalDirectoryModal } from '../components/AlphabeticalDirectoryModal';
 import { RulesRegulationsModal } from '../components/RulesRegulationsModal';
 import { UserGuideModal } from '../components/UserGuideModal';
+import { PinnedAnnouncementBanner } from '../components/PinnedAnnouncementBanner';
 import { KmplLogo } from '../components/KmplLogo';
 import { formatINR } from '../lib/database';
-import { Search, ListFilter, Users, Phone, ChevronRight, Award, Shield, Crown, Code2, ExternalLink, ScrollText, BookOpen, Sparkles } from 'lucide-react';
+import { Search, ListFilter, Users, Phone, ChevronRight, Award, Shield, Crown, Code2, ExternalLink, ScrollText, BookOpen, Sparkles, Megaphone } from 'lucide-react';
 
 export const DirectoryPage: React.FC = () => {
   const { players, admins, loading, isPlayerAdmin, getAdminForPlayer } = useRealtimeData();
@@ -88,6 +90,9 @@ export const DirectoryPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Latest Pinned Announcement Banner (Requirement 7) */}
+      <PinnedAnnouncementBanner />
+
       {/* Directory Sub-Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -105,8 +110,17 @@ export const DirectoryPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Action Buttons: A-Z Index Picker, Rules, Guide */}
+        {/* Action Buttons: Announcements (beside rules), Rules, Guide, A-Z Index Picker */}
         <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to="/announcements"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-xs sm:text-sm font-bold transition-colors shadow-2xs min-h-[44px]"
+            title={t.announcements}
+          >
+            <Megaphone className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+            <span>{t.announcements}</span>
+          </Link>
+
           <button
             onClick={() => setIsRulesOpen(true)}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-xs sm:text-sm font-bold transition-colors shadow-2xs min-h-[44px]"

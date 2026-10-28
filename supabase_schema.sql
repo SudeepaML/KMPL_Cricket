@@ -100,6 +100,28 @@ create table if not exists public.tournament_rules (
     updated_by text
 );
 
+-- Table: chat_messages
+-- Community Chat message board for village players and tournament administrators.
+create table if not exists public.chat_messages (
+    id uuid primary key default gen_random_uuid(),
+    sender_name text not null,
+    sender_kmpl_id text not null,
+    is_admin boolean default false,
+    message text not null check (char_length(trim(message)) > 0 and char_length(message) <= 500),
+    created_at timestamptz default now()
+);
+
+-- Table: announcements
+-- Official announcements posted by tournament administrators.
+create table if not exists public.announcements (
+    id uuid primary key default gen_random_uuid(),
+    title varchar(100) not null,
+    body text not null check (char_length(trim(body)) > 0 and char_length(body) <= 1000),
+    posted_by text not null,
+    is_pinned boolean not null default false,
+    created_at timestamptz default now()
+);
+
 -- 3. ROW LEVEL SECURITY (RLS) POLICIES
 
 -- Enable RLS on all tables
@@ -109,6 +131,8 @@ alter table public.monthly_payments enable row level security;
 alter table public.loans enable row level security;
 alter table public.closed_months enable row level security;
 alter table public.tournament_rules enable row level security;
+alter table public.chat_messages enable row level security;
+alter table public.announcements enable row level security;
 
 -- Helper function: is_registered_admin()
 -- Checks if the authenticated Supabase user's email exists in the admins table.
@@ -194,6 +218,34 @@ create policy "Public can view tournament rules"
 drop policy if exists "Admins can manage tournament rules" on public.tournament_rules;
 create policy "Admins can manage tournament rules"
     on public.tournament_rules for all
+    using (true)
+    with check (true);
+
+-- Policies for chat_messages table:
+drop policy if exists "Public can view chat messages" on public.chat_messages;
+create policy "Public can view chat messages"
+    on public.chat_messages for select
+    using (true);
+
+drop policy if exists "Public and players can insert chat messages" on public.chat_messages;
+create policy "Public and players can insert chat messages"
+    on public.chat_messages for insert
+    with check (char_length(trim(message)) > 0 and char_length(message) <= 500);
+
+drop policy if exists "Admins can delete chat messages" on public.chat_messages;
+create policy "Admins can delete chat messages"
+    on public.chat_messages for delete
+    using (true);
+
+-- Policies for announcements table:
+drop policy if exists "Public can view announcements" on public.announcements;
+create policy "Public can view announcements"
+    on public.announcements for select
+    using (true);
+
+drop policy if exists "Admins can manage announcements" on public.announcements;
+create policy "Admins can manage announcements"
+    on public.announcements for all
     using (true)
     with check (true);
 
@@ -300,6 +352,8 @@ alter publication supabase_realtime add table public.monthly_payments;
 alter publication supabase_realtime add table public.loans;
 alter publication supabase_realtime add table public.closed_months;
 alter publication supabase_realtime add table public.tournament_rules;
+alter publication supabase_realtime add table public.chat_messages;
+alter publication supabase_realtime add table public.announcements;
 
 -- 6. SEED DATA
 
@@ -373,3 +427,19 @@ values
     ('rule-06', 6, 'general', '100% Public Transparency — No Player Login Needed', 'ಸಂಪೂರ್ಣ ಗ್ರಾಮ ಪಾರದರ್ಶಕತೆ — ಲಾಗಿನ್ ಅಗತ್ಯವಿಲ್ಲ', 'No password or login is required for players or villagers! Anyone can freely view player profiles, monthly payment lists, countdown clocks, and loan records anytime.', 'ಆಟಗಾರರಿಗೆ ಮತ್ತು ಊರಿನ ಗ್ರಾಮಸ್ಥರಿಗೆ ಯಾವುದೇ ಲಾಗಿನ್ ಅಥವಾ ಪಾಸ್‌ವರ್ಡ್ ಅಗತ್ಯವಿಲ್ಲ! ಯಾರು ಬೇಕಾದರೂ ಎಲ್ಲಾ ಸದಸ್ಯರ ಪಟ್ಟಿ, ಪಾವತಿ ಸ್ಥಿತಿ ಮತ್ತು ಸಾಲದ ವಿವರಗಳನ್ನು ಮುಕ್ತವಾಗಿ ವೀಕ್ಷಿಸಬಹುದು.', true, 'Developer Sudeepa ML'),
     ('rule-07', 7, 'general', 'Month Closure & Admin Phone Audit Lock', 'ತಿಂಗಳು ಮುಕ್ತಾಯ ಮತ್ತು ಆಡಿಟ್ ಲಾಕ್', 'Completed months are locked for audit. Only authorized committee members can record collections, issue loans, or close months using phone verification.', 'ಮುಕ್ತಾಯವಾದ ತಿಂಗಳುಗಳನ್ನು ಆಡಿಟ್‌ಗಾಗಿ ಲಾಕ್ ಮಾಡಲಾಗುತ್ತದೆ. ನೋಂದಾಯಿತ ಆಡಳಿತ ಅಧಿಕಾರಿಗಳು ಮಾತ್ರ ಮೊಬೈಲ್ ದೃಢೀಕರಣದೊಂದಿಗೆ ತಿಂಗಳು ಲಾಕ್ ಮಾಡಬಹುದು ಮತ್ತು ತಿದ್ದುಪಡಿ ಮಾಡಬಹುದು.', true, 'Developer Sudeepa ML')
 on conflict (id) do nothing;
+
+-- Seed Sample Community Chat Messages
+insert into public.chat_messages (sender_name, sender_kmpl_id, is_admin, message, created_at)
+values
+    ('Developer Sudeepa ML', 'KMPL01', true, 'Welcome to KMPL Community Chat! Tournament announcements and player discussions happen right here.', now() - interval '2 hours'),
+    ('Kiran Kumar (President)', 'KMPL02', true, 'Tournament committee meeting is this Sunday at 10 AM. Ground maintenance and April contributions review.', now() - interval '1 hour'),
+    ('Ravi Gowda', 'KMPL04', false, 'Ready for cricket practice this weekend! 🏏', now() - interval '30 minutes')
+on conflict do nothing;
+
+-- Seed Sample Announcements
+insert into public.announcements (title, body, posted_by, is_pinned, created_at)
+values
+    ('KMPL Season 01 Official Tournament Kickoff', 'Welcome all Kagalagere Megala Hatti members! Season 01 monthly collections start April 2026. Every player must contribute on or before the 15th of each month.', 'Developer Sudeepa ML', true, now() - interval '3 days'),
+    ('Uniform & Kit Distribution Schedule', 'Team jersey and match ball distribution will take place at the village ground on the upcoming Sunday. All senior and junior players are requested to attend.', 'Kiran Kumar (President)', false, now() - interval '1 day')
+on conflict do nothing;
+

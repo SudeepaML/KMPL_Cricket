@@ -14,7 +14,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { db } from '../lib/database';
-import { Player, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule } from '../types';
+import { Player, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule, Announcement } from '../types';
 
 export interface TournamentFinancialStats {
   totalMonthlyContributions: number;
@@ -32,6 +32,8 @@ export interface RealtimeDataContextType {
   admins: Admin[];
   closedMonths: ClosedMonth[];
   rules: FundRule[];
+  announcements: Announcement[];
+  latestPinnedAnnouncement: Announcement | null;
   loading: boolean;
   error: string | null;
   stats: TournamentFinancialStats;
@@ -49,18 +51,20 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [closedMonths, setClosedMonths] = useState<ClosedMonth[]>([]);
   const [rules, setRules] = useState<FundRule[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [allPlayers, allPayments, allLoans, allAdmins, allClosed, allRules] = await Promise.all([
+      const [allPlayers, allPayments, allLoans, allAdmins, allClosed, allRules, allAnnouncements] = await Promise.all([
         db.getPlayers(),
         db.getPayments(),
         db.getLoans(),
         db.getAdmins(),
         db.getClosedMonths(),
         db.getRules(),
+        db.getAnnouncements(),
       ]);
 
       setPlayers(allPlayers);
@@ -69,6 +73,7 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setAdmins(allAdmins);
       setClosedMonths(allClosed);
       setRules(allRules);
+      setAnnouncements(allAnnouncements);
       setError(null);
     } catch (err: unknown) {
       console.error('Failed to fetch realtime data:', err);
@@ -157,6 +162,9 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return Boolean(getAdminForPlayer(player));
   }, [getAdminForPlayer]);
 
+  // Latest pinned announcement for home banner
+  const latestPinnedAnnouncement = announcements.find((a) => a.is_pinned) || null;
+
   const value: RealtimeDataContextType = {
     players,
     payments,
@@ -164,6 +172,8 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     admins,
     closedMonths,
     rules,
+    announcements,
+    latestPinnedAnnouncement,
     loading,
     error,
     stats,

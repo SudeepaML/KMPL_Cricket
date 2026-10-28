@@ -19,7 +19,7 @@ import { KmplLogo } from './KmplLogo';
 import { DeveloperProfileModal } from './DeveloperProfileModal';
 import { RulesRegulationsModal } from './RulesRegulationsModal';
 import { UserGuideModal } from './UserGuideModal';
-import { Database, Globe, Shield, User, Code2, BookOpen, ScrollText, Sun, Moon, Lock } from 'lucide-react';
+import { Database, Globe, Shield, User, Code2, BookOpen, ScrollText, Sun, Moon, Lock, Megaphone } from 'lucide-react';
 
 interface HeaderProps {
   onOpenDbSettings: () => void;
@@ -53,6 +53,22 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
 
           {/* Zone 2: Desktop Nav Links */}
           <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-emerald-100">
+            <Link
+              to="/chat"
+              className={`whitespace-nowrap transition-colors hover:text-white ${
+                location.pathname === '/chat' ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
+              }`}
+            >
+              {t.chat}
+            </Link>
+            <Link
+              to="/announcements"
+              className={`whitespace-nowrap transition-colors hover:text-white ${
+                location.pathname === '/announcements' ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
+              }`}
+            >
+              {t.announcements}
+            </Link>
             <Link
               to="/directory"
               className={`whitespace-nowrap transition-colors hover:text-white ${
@@ -101,8 +117,24 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             </Link>
           </nav>
 
-          {/* Zone 3: Actions (Rules, Guide, Developer Profile, DB Settings, Theme, Language, Admin) */}
+          {/* Zone 3: Actions (Announcements beside Rules, Guide, Developer Profile, DB Settings, Theme, Language, Admin) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Announcements Button (Universal - beside rules & regulations) */}
+            <Link
+              to="/announcements"
+              className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-bold transition-colors border flex items-center gap-1.5 ${
+                location.pathname === '/announcements'
+                  ? 'bg-amber-400 text-slate-950 border-amber-300'
+                  : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 hover:text-white border-amber-400/40'
+              }`}
+              title={t.announcements}
+              aria-label={t.announcements}
+            >
+              <Megaphone className="w-3.5 h-3.5 text-amber-300" />
+              <span className="hidden md:inline">{t.announcements}</span>
+              <span className="hidden sm:inline md:hidden">Notice</span>
+            </Link>
+
             {/* Rules & Regulations Button (Universal) */}
             <button
               onClick={() => setIsRulesModalOpen(true)}

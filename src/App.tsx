@@ -31,6 +31,8 @@ import { AdminBaddiPage } from './pages/AdminBaddiPage';
 import { AdminPlayersPage } from './pages/AdminPlayersPage';
 import { AdminManagePage } from './pages/AdminManagePage';
 import { AdminRulesPage } from './pages/AdminRulesPage';
+import { CommunityChatPage } from './pages/CommunityChatPage';
+import { AnnouncementsPage } from './pages/AnnouncementsPage';
 
 export default function App() {
   const [isDbSettingsOpen, setIsDbSettingsOpen] = useState(false);
@@ -49,10 +51,12 @@ export default function App() {
                   {/* Main Content Area */}
                   <main className="flex-1">
                     <Routes>
-                      {/* Default redirect to Directory */}
-                      <Route path="/" element={<Navigate to="/directory" replace />} />
+                      {/* Default redirect to Community Chat */}
+                      <Route path="/" element={<Navigate to="/chat" replace />} />
 
                       {/* Player Portal Screens */}
+                      <Route path="/chat" element={<CommunityChatPage />} />
+                      <Route path="/announcements" element={<AnnouncementsPage />} />
                       <Route path="/directory" element={<DirectoryPage />} />
                       <Route path="/fund" element={<MonthlyFundPage />} />
                       <Route path="/fund/:month" element={<MonthlyFundPage />} />
@@ -74,7 +78,7 @@ export default function App() {
                       </Route>
 
                       {/* Fallback */}
-                      <Route path="*" element={<Navigate to="/directory" replace />} />
+                      <Route path="*" element={<Navigate to="/chat" replace />} />
                     </Routes>
                   </main>
 

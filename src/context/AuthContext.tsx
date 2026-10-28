@@ -11,13 +11,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { db } from '../lib/database';
-import { Admin } from '../types';
+import { Admin, Player } from '../types';
 
 interface AuthContextType {
   isAdmin: boolean;
   currentAdmin: Admin | null;
   adminDisplayName: string;
   isDeveloper: boolean;
+  currentPlayer: Player | null;
+  loginAsPlayer: (player: Player) => void;
+  logoutPlayer: () => void;
   loading: boolean;
   isSupabaseConnected: boolean;
   sendOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
@@ -31,8 +34,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentAdmin, setCurrentAdmin] = useState<Admin | null>(null);
+  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('kmpl_current_player');
+        return saved ? JSON.parse(saved) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
+  const loginAsPlayer = (player: Player) => {
+    setCurrentPlayer(player);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kmpl_current_player', JSON.stringify(player));
+    }
+  };
+
+  const logoutPlayer = () => {
+    setCurrentPlayer(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kmpl_current_player');
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -233,6 +261,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentAdmin,
     adminDisplayName,
     isDeveloper: Boolean(currentAdmin?.is_developer),
+    currentPlayer,
+    loginAsPlayer,
+    logoutPlayer,
     loading,
     isSupabaseConnected: isSupabaseConfigured,
     sendOtp,

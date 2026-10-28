@@ -9,7 +9,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase';
-import { Player, PlayerType, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule } from '../types';
+import { Player, PlayerType, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule, ChatMessage, Announcement } from '../types';
 
 // The 13 official months for the KMPL 2026-2027 tournament cycle
 export const TOURNAMENT_MONTHS: string[] = [
@@ -266,6 +266,52 @@ export const SEED_RULES: FundRule[] = [
   },
 ];
 
+export const SEED_CHAT_MESSAGES: ChatMessage[] = [
+  {
+    id: 'msg-01',
+    sender_name: 'Developer Sudeepa ML',
+    sender_kmpl_id: 'KMPL01',
+    is_admin: true,
+    message: 'Welcome everyone to KMPL Season 01 Community Chat! Let us maintain sportsmanship and transparent cricket finance.',
+    created_at: '2026-04-01T09:00:00Z',
+  },
+  {
+    id: 'msg-02',
+    sender_name: 'Kiran Kumar (President)',
+    sender_kmpl_id: 'KMPL02',
+    is_admin: true,
+    message: 'Reminder to all members: Monthly contribution deadline is on the 15th of each month.',
+    created_at: '2026-04-01T10:15:00Z',
+  },
+  {
+    id: 'msg-03',
+    sender_name: 'Ravi Gowda',
+    sender_kmpl_id: 'KMPL04',
+    is_admin: false,
+    message: 'Great initiative! Practice matches start this weekend at Kagalagere ground.',
+    created_at: '2026-04-01T11:30:00Z',
+  },
+];
+
+const SEED_ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: 'ann-01',
+    title: 'KMPL Season 01 Official Tournament Kickoff',
+    body: 'Welcome all Kagalagere Megala Hatti members! Season 01 monthly collections start April 2026. Every player must contribute on or before the 15th of each month.',
+    posted_by: 'Developer Sudeepa ML',
+    is_pinned: true,
+    created_at: '2026-04-01T09:00:00Z',
+  },
+  {
+    id: 'ann-02',
+    title: 'Uniform & Kit Distribution Schedule',
+    body: 'Team jersey and match ball distribution will take place at the village ground on the upcoming Sunday. All senior and junior players are requested to attend.',
+    posted_by: 'Kiran Kumar (President)',
+    is_pinned: false,
+    created_at: '2026-04-05T14:30:00Z',
+  },
+];
+
 // Local Storage In-Memory Reactive Store
 class LocalStore {
   players: Player[];
@@ -274,6 +320,8 @@ class LocalStore {
   admins: Admin[];
   closedMonths: ClosedMonth[];
   rules: FundRule[];
+  chatMessages: ChatMessage[];
+  announcements: Announcement[];
   listeners: (() => void)[] = [];
 
   constructor() {
@@ -283,6 +331,8 @@ class LocalStore {
     this.admins = this.load('kmpl_admins', SEED_ADMINS);
     this.closedMonths = this.load('kmpl_closed_months', SEED_CLOSED_MONTHS);
     this.rules = this.load('kmpl_rules', SEED_RULES);
+    this.chatMessages = this.load('kmpl_chat_messages', SEED_CHAT_MESSAGES);
+    this.announcements = this.load('kmpl_announcements', SEED_ANNOUNCEMENTS);
     this.ensureAdminsInPlayers();
     this.autoFlagOverdue();
   }
@@ -351,6 +401,8 @@ class LocalStore {
     localStorage.setItem('kmpl_admins', JSON.stringify(this.admins));
     localStorage.setItem('kmpl_closed_months', JSON.stringify(this.closedMonths));
     localStorage.setItem('kmpl_rules', JSON.stringify(this.rules));
+    localStorage.setItem('kmpl_chat_messages', JSON.stringify(this.chatMessages));
+    localStorage.setItem('kmpl_announcements', JSON.stringify(this.announcements));
     this.notify();
   }
 
@@ -869,6 +921,212 @@ export const db = {
     localStore.rules = [...SEED_RULES];
     localStore.save();
     return { success: true };
+  },
+
+  // --- COMMUNITY CHAT ---
+  /**
+   * Fetch the last 100 chat messages, oldest at the top.
+   */
+  async getChatMessages(): Promise<ChatMessage[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (!error && data) {
+          // Reverse so oldest is at the top, newest at the bottom
+          return (data as ChatMessage[]).reverse();
+        }
+      } catch (err) {
+        console.warn('Supabase chat_messages fallback to localStore:', err);
+      }
+    }
+    return [...localStore.chatMessages].slice(-100);
+  },
+
+  /**
+   * Send a new chat message to the community chat table.
+   */
+  async sendChatMessage(msg: Omit<ChatMessage, 'id' | 'created_at'>): Promise<ChatMessage> {
+    const payload = {
+      sender_name: msg.sender_name.trim(),
+      sender_kmpl_id: msg.sender_kmpl_id.trim(),
+      is_admin: Boolean(msg.is_admin),
+      message: msg.message.trim(),
+    };
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .insert([payload])
+          .select()
+          .single();
+        if (!error && data) {
+          return data as ChatMessage;
+        }
+      } catch (err) {
+        console.warn('Supabase insert chat_message fallback to localStore:', err);
+      }
+    }
+
+    const newMsg: ChatMessage = {
+      ...payload,
+      id: 'chat_' + Math.random().toString(36).substring(2, 9),
+      created_at: new Date().toISOString(),
+    };
+    localStore.chatMessages.push(newMsg);
+    if (localStore.chatMessages.length > 200) {
+      localStore.chatMessages = localStore.chatMessages.slice(-100);
+    }
+    localStore.save();
+    return newMsg;
+  },
+
+  /**
+   * Delete a chat message (Admins only).
+   */
+  async deleteChatMessage(id: string): Promise<void> {
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.from('chat_messages').delete().eq('id', id);
+        if (!error) return;
+      } catch (err) {
+        console.warn('Supabase delete chat_message fallback to localStore:', err);
+      }
+    }
+
+    localStore.chatMessages = localStore.chatMessages.filter(m => m.id !== id);
+    localStore.save();
+  },
+
+  // --- ANNOUNCEMENTS ---
+  /**
+   * Fetch all announcements, sorted with pinned first, then newest first.
+   */
+  async getAnnouncements(): Promise<Announcement[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('announcements')
+          .select('*')
+          .order('is_pinned', { ascending: false })
+          .order('created_at', { ascending: false });
+        if (!error && data) {
+          return data as Announcement[];
+        }
+      } catch (err) {
+        console.warn('Supabase getAnnouncements fallback to localStore:', err);
+      }
+    }
+
+    return [...localStore.announcements].sort((a, b) => {
+      if (a.is_pinned !== b.is_pinned) {
+        return a.is_pinned ? -1 : 1;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  },
+
+  /**
+   * Create a new announcement (Admins only).
+   */
+  async createAnnouncement(payload: {
+    title: string;
+    body: string;
+    posted_by: string;
+    is_pinned?: boolean;
+  }): Promise<Announcement> {
+    const isPinned = !!payload.is_pinned;
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('announcements')
+          .insert([
+            {
+              title: payload.title.trim(),
+              body: payload.body.trim(),
+              posted_by: payload.posted_by.trim(),
+              is_pinned: isPinned,
+            },
+          ])
+          .select()
+          .single();
+
+        if (!error && data) {
+          return data as Announcement;
+        }
+      } catch (err) {
+        console.warn('Supabase createAnnouncement fallback to localStore:', err);
+      }
+    }
+
+    const newAnn: Announcement = {
+      id: 'ann_' + Math.random().toString(36).substring(2, 9),
+      title: payload.title.trim(),
+      body: payload.body.trim(),
+      posted_by: payload.posted_by.trim(),
+      is_pinned: isPinned,
+      created_at: new Date().toISOString(),
+    };
+
+    localStore.announcements.unshift(newAnn);
+    localStore.announcements.sort((a, b) => {
+      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+    localStore.save();
+    return newAnn;
+  },
+
+  /**
+   * Toggle pin status of an announcement (Admins only).
+   */
+  async togglePinAnnouncement(id: string, is_pinned: boolean): Promise<void> {
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase
+          .from('announcements')
+          .update({ is_pinned })
+          .eq('id', id);
+        if (!error) return;
+      } catch (err) {
+        console.warn('Supabase togglePinAnnouncement fallback to localStore:', err);
+      }
+    }
+
+    const ann = localStore.announcements.find((a) => a.id === id);
+    if (ann) {
+      ann.is_pinned = is_pinned;
+      localStore.announcements.sort((a, b) => {
+        if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      localStore.save();
+    }
+  },
+
+  /**
+   * Delete an announcement (Admins only).
+   */
+  async deleteAnnouncement(id: string): Promise<void> {
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase
+          .from('announcements')
+          .delete()
+          .eq('id', id);
+        if (!error) return;
+      } catch (err) {
+        console.warn('Supabase deleteAnnouncement fallback to localStore:', err);
+      }
+    }
+
+    localStore.announcements = localStore.announcements.filter((a) => a.id !== id);
+    localStore.save();
   },
 
   /**

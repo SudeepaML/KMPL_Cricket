@@ -10,13 +10,15 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { Users, Calendar, CircleDollarSign, BarChart3, ShieldCheck, Lock } from 'lucide-react';
+import { Users, Calendar, CircleDollarSign, BarChart3, MessageSquare, Lock, Megaphone } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
 
   const navItems = [
+    { to: '/chat', label: t.chat, icon: MessageSquare },
+    { to: '/announcements', label: t.announcements, icon: Megaphone },
     { to: '/directory', label: t.directory, icon: Users },
     { to: '/fund', label: t.monthlyFund, icon: Calendar },
     { to: '/baddi', label: t.baddiChitti, icon: CircleDollarSign },
@@ -26,7 +28,7 @@ export const BottomNav: React.FC = () => {
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-lg safe-bottom transition-colors duration-200">
-      <nav className="grid grid-cols-5 items-center h-16 max-w-lg mx-auto px-1">
+      <nav className="grid grid-cols-7 items-center h-16 max-w-xl mx-auto px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
