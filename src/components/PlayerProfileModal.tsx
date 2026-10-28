@@ -11,7 +11,7 @@ import React from 'react';
 import { Player, Admin } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { formatINR, DEVELOPER_INFO } from '../lib/database';
-import { X, Phone, Calendar, Award, CheckCircle2, AlertCircle, ExternalLink, Globe, Code2, Shield } from 'lucide-react';
+import { X, Phone, Calendar, Award, CheckCircle2, AlertCircle, ExternalLink, Globe, Code2, Shield, Mail } from 'lucide-react';
 
 interface PlayerProfileModalProps {
   player: Player | null;
@@ -30,7 +30,7 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
 
   if (!player) return null;
 
-  const isDeveloper = player.name.toLowerCase().includes('sudeepa') || player.phone.includes('7760880282') || adminInfo?.is_developer;
+  const isDeveloper = player.name.toLowerCase().includes('sudeepa') || (player.phone ? player.phone.includes('7760880282') : false) || adminInfo?.is_developer;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
@@ -109,18 +109,33 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
 
         {/* Details Grid */}
         <div className="mt-4 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 text-slate-400" />
-              Phone Number
-            </span>
-            <a
-              href={`tel:${player.phone}`}
-              className="font-mono font-medium text-emerald-700 hover:underline"
-            >
-              {player.phone}
-            </a>
-          </div>
+          {player.phone ? (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                Phone Number
+              </span>
+              <a
+                href={`tel:${player.phone}`}
+                className="font-mono font-medium text-emerald-700 hover:underline"
+              >
+                {player.phone}
+              </a>
+            </div>
+          ) : adminInfo?.email ? (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-slate-400" />
+                Officer Email
+              </span>
+              <a
+                href={`mailto:${adminInfo.email}`}
+                className="font-mono font-medium text-emerald-700 hover:underline truncate max-w-[180px]"
+              >
+                {adminInfo.email}
+              </a>
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-500 flex items-center gap-1.5">

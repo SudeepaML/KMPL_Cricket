@@ -67,7 +67,68 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
         db.getAnnouncements(),
       ]);
 
-      setPlayers(allPlayers);
+      // "also me also player": Ensure all tournament admins & Developer Sudeepa ML appear as players
+      const mergedPlayers = [...allPlayers];
+      allAdmins.forEach((admin) => {
+        const aName = admin.name.toLowerCase().trim();
+        const cleanAdminPhone = (admin.phone || '').replace(/\D/g, '').slice(-10);
+
+        const exists = mergedPlayers.some((p) => {
+          const pName = p.name.toLowerCase().trim();
+          const cleanPlayerPhone = (p.phone || '').replace(/\D/g, '').slice(-10);
+          const nameMatch = pName === aName || aName.startsWith(pName) || pName.startsWith(aName);
+          const phoneMatch = cleanAdminPhone.length >= 8 && cleanPlayerPhone.length >= 8 && cleanPlayerPhone === cleanAdminPhone;
+          return nameMatch || phoneMatch;
+        });
+
+        if (!exists) {
+          let maxNum = 0;
+          mergedPlayers.forEach((p) => {
+            const m = p.kmpl_id.match(/KMPL(\d+)/i);
+            if (m && m[1]) {
+              const num = parseInt(m[1], 10);
+              if (num > maxNum) maxNum = num;
+            }
+          });
+          const nextKmplId = `KMPL${String(maxNum + 1).padStart(2, '0')}`;
+          mergedPlayers.push({
+            id: admin.id || `admin-player-${admin.name.toLowerCase().replace(/\s+/g, '-')}`,
+            kmpl_id: nextKmplId,
+            name: admin.name,
+            phone: admin.phone || '',
+            type: 'Senior',
+            monthly_amount: 200,
+            join_date: '2026-04-01',
+            chitti_taken: false,
+          });
+        }
+      });
+
+      // Also ensure Developer Sudeepa ML is explicitly included if not already
+      const hasDev = mergedPlayers.some((p) => p.name.toLowerCase().includes('sudeepa'));
+      if (!hasDev) {
+        let maxNum = 0;
+        mergedPlayers.forEach((p) => {
+          const m = p.kmpl_id.match(/KMPL(\d+)/i);
+          if (m && m[1]) {
+            const num = parseInt(m[1], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        });
+        const nextKmplId = `KMPL${String(maxNum + 1).padStart(2, '0')}`;
+        mergedPlayers.unshift({
+          id: 'a1111111-1111-1111-1111-111111111111',
+          kmpl_id: nextKmplId,
+          name: 'Developer Sudeepa ML',
+          phone: '7760880282',
+          type: 'Senior',
+          monthly_amount: 200,
+          join_date: '2026-04-01',
+          chitti_taken: false,
+        });
+      }
+
+      setPlayers(mergedPlayers);
       setPayments(allPayments);
       setLoans(allLoans);
       setAdmins(allAdmins);
@@ -144,11 +205,11 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Helper to find the Admin profile matching a Player (by phone or name)
   const getAdminForPlayer = useCallback((player: Player): Admin | undefined => {
-    const cleanPlayerPhone = player.phone.replace(/\D/g, '').slice(-10);
+    const cleanPlayerPhone = (player.phone || '').replace(/\D/g, '').slice(-10);
     const pName = player.name.toLowerCase().trim();
     return admins.find(a => {
-      const cleanAdminPhone = a.phone.replace(/\D/g, '').slice(-10);
-      const phoneMatch = cleanAdminPhone.length >= 8 && cleanAdminPhone === cleanPlayerPhone;
+      const cleanAdminPhone = (a.phone || '').replace(/\D/g, '').slice(-10);
+      const phoneMatch = cleanAdminPhone.length >= 8 && cleanPlayerPhone.length >= 8 && cleanAdminPhone === cleanPlayerPhone;
       const aName = a.name.toLowerCase().trim();
       const nameMatch = aName === pName ||
                         aName.startsWith(pName) ||
@@ -157,8 +218,9 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
   }, [admins]);
 
-  // Helper to check if a player phone or email matches an admin
+  // Helper to check if a player is an administrator
   const isPlayerAdmin = useCallback((player: Player): boolean => {
+    if (player.name.toLowerCase().includes('sudeepa')) return true;
     return Boolean(getAdminForPlayer(player));
   }, [getAdminForPlayer]);
 

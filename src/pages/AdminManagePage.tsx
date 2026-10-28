@@ -26,7 +26,6 @@ export const AdminManagePage: React.FC = () => {
 
   // New admin form state
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [roleTitle, setRoleTitle] = useState('Tournament Co-Admin');
   const [playerType, setPlayerType] = useState<PlayerType>('Senior');
@@ -39,7 +38,7 @@ export const AdminManagePage: React.FC = () => {
     try {
       await db.addAdmin({
         name: name.trim(),
-        phone: phone.trim(),
+        phone: '',
         email: email.trim().toLowerCase(),
         is_developer: false,
         role_title: roleTitle.trim(),
@@ -51,7 +50,6 @@ export const AdminManagePage: React.FC = () => {
       });
       setIsAddModalOpen(false);
       setName('');
-      setPhone('');
       setEmail('');
       setPlayerType('Senior');
       setTimeout(() => setStatusMessage(null), 3500);
@@ -186,11 +184,15 @@ export const AdminManagePage: React.FC = () => {
                     <Mail className="w-3.5 h-3.5 text-slate-400" />
                     <span>{admin.email}</span>
                   </span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{admin.phone}</span>
-                  </span>
+                  {admin.phone ? (
+                    <>
+                      <span>·</span>
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{admin.phone}</span>
+                      </span>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -249,21 +251,7 @@ export const AdminManagePage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Mobile Number
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="10-digit mobile..."
-                  required
-                  className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl font-mono outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Email Address (For Supabase OTP)
+                  Email Address (For Supabase OTP Login)
                 </label>
                 <input
                   type="email"

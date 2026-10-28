@@ -60,7 +60,7 @@ export const AdminCollectPage: React.FC = () => {
     return (
       p.name.toLowerCase().includes(q) ||
       p.kmpl_id.toLowerCase().includes(q) ||
-      p.phone.includes(q)
+      (p.phone ? p.phone.includes(q) : false)
     );
   });
 
@@ -265,7 +265,7 @@ export const AdminCollectPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5 font-mono">
-                    Fee: {formatINR(player.monthly_amount)} · {player.phone}
+                    Fee: {formatINR(player.monthly_amount)}{player.phone ? ` · ${player.phone}` : ''}
                     {isPaid && currentPay && (
                       <span className="text-emerald-700 font-semibold block sm:inline sm:ml-2">
                         · {currentPay.payment_method}

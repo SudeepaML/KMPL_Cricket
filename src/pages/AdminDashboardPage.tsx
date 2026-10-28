@@ -138,7 +138,7 @@ export const AdminDashboardPage: React.FC = () => {
                 {adminDisplayName}
               </h1>
               <p className="text-xs text-emerald-200 mt-0.5 font-mono">
-                {currentAdmin?.email} · {currentAdmin?.phone}
+                {currentAdmin?.email}{currentAdmin?.phone ? ` · ${currentAdmin?.phone}` : ''}
               </p>
             </div>
           </div>
@@ -404,9 +404,11 @@ export const AdminDashboardPage: React.FC = () => {
                 <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">
                   {adm.is_developer ? '👑 ' : ''}{adm.name}
                 </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">
-                  {adm.phone}
-                </span>
+                {adm.phone ? (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">
+                    {adm.phone}
+                  </span>
+                ) : null}
                 <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono block truncate">
                   {adm.email}
                 </span>

@@ -248,7 +248,7 @@ export const MonthlyFundPage: React.FC = () => {
                               {player.name}
                             </span>
                             <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-                              {player.kmpl_id} · {player.phone}
+                              {player.kmpl_id}{player.phone ? ` · ${player.phone}` : ''}
                             </span>
                           </div>
                         </div>

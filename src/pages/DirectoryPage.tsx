@@ -47,13 +47,13 @@ export const DirectoryPage: React.FC = () => {
     return players.filter((p) => {
       const matchName = p.name.toLowerCase().includes(q);
       const matchId = p.kmpl_id.toLowerCase().includes(q);
-      const matchPhone = p.phone.replace(/\D/g, '').includes(q.replace(/\D/g, ''));
+      const matchPhone = p.phone ? p.phone.replace(/\D/g, '').includes(q.replace(/\D/g, '')) : false;
       return matchName || matchId || matchPhone;
     });
   }, [players, searchTerm]);
 
   const handlePlayerClick = (player: Player) => {
-    if (player.phone.includes('7760880282') || player.name.toLowerCase().includes('sudeepa')) {
+    if ((player.phone && player.phone.includes('7760880282')) || player.name.toLowerCase().includes('sudeepa')) {
       setIsDevProfileOpen(true);
     } else {
       setSelectedPlayer(player);
@@ -191,7 +191,7 @@ export const DirectoryPage: React.FC = () => {
           {filteredPlayers.map((player, index) => {
             const adminInfo = getAdminForPlayer(player);
             const isAdmin = Boolean(adminInfo);
-            const isDeveloper = player.phone.includes('7760880282') || player.name.toLowerCase().includes('sudeepa') || adminInfo?.is_developer;
+            const isDeveloper = (player.phone && player.phone.includes('7760880282')) || player.name.toLowerCase().includes('sudeepa') || adminInfo?.is_developer;
 
             return (
               <button
@@ -247,11 +247,15 @@ export const DirectoryPage: React.FC = () => {
 
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex-wrap">
                       <span className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold">{player.kmpl_id}</span>
-                      <span>·</span>
-                      <span className="flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-                        <span className="font-mono">{player.phone}</span>
-                      </span>
+                      {player.phone ? (
+                        <>
+                          <span>·</span>
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                            <span className="font-mono">{player.phone}</span>
+                          </span>
+                        </>
+                      ) : null}
                       <span>·</span>
                       <span className="font-medium text-slate-600 dark:text-slate-300">
                         {player.type === 'Senior' ? 'Senior ₹200' : 'Junior ₹100'}

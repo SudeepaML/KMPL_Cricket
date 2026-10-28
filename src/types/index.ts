@@ -11,7 +11,7 @@ export interface Player {
   id: string;
   kmpl_id: string;
   name: string;
-  phone: string;
+  phone?: string;
   type: PlayerType;
   monthly_amount: number; // 200 for Senior, 100 for Junior
   join_date: string;
@@ -57,7 +57,7 @@ export interface Loan {
 export interface Admin {
   id: string;
   name: string;
-  phone: string;
+  phone?: string;
   email: string;
   is_developer: boolean;
   role_title?: string;

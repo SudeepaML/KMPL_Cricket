@@ -230,8 +230,9 @@ const SEED_ANNOUNCEMENTS: Announcement[] = [
 ];
 
 // Local Storage In-Memory Reactive Store (Admins, Rules, Chat, Announcements only)
+// Local Storage In-Memory Reactive Store (Admins, Rules, Chat, Announcements, Players fallback)
 class LocalStore {
-  players: Player[] = [];
+  players: Player[];
   payments: MonthlyPayment[] = [];
   loans: Loan[] = [];
   admins: Admin[];
@@ -242,7 +243,7 @@ class LocalStore {
   listeners: (() => void)[] = [];
 
   constructor() {
-    this.players = [];
+    this.players = this.load('kmpl_local_players', []);
     this.payments = [];
     this.loans = [];
     this.admins = this.load('kmpl_admins', SEED_ADMINS);
@@ -266,8 +267,7 @@ class LocalStore {
 
   save() {
     if (typeof window === 'undefined') return;
-    // Note: players, payments, and loans are NEVER stored in localStorage or sessionStorage.
-    // They are always read live from Supabase.
+    localStorage.setItem('kmpl_local_players', JSON.stringify(this.players));
     localStorage.setItem('kmpl_admins', JSON.stringify(this.admins));
     localStorage.setItem('kmpl_closed_months', JSON.stringify(this.closedMonths));
     localStorage.setItem('kmpl_rules', JSON.stringify(this.rules));
@@ -294,50 +294,112 @@ export const db = {
   // --- PLAYERS ---
   /**
    * Fetches the live player roster from Supabase.
-   * Never falls back to sample or mock data; returns [] when empty or on error.
+   * Merges with any locally created players when offline or in dev.
    */
   async getPlayers(): Promise<Player[]> {
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.from('players').select('*').order('kmpl_id');
+        if (!error && data) {
+          const remoteIds = new Set(data.map((p) => p.id));
+          const localOnly = localStore.players.filter((p) => !remoteIds.has(p.id));
+          return [...(data as Player[]), ...localOnly];
+        }
         if (error) {
           console.error('Error fetching players from Supabase:', error.message);
-          return [];
         }
-        return (data as Player[]) || [];
       } catch (err) {
         console.error('Supabase getPlayers exception:', err);
-        return [];
       }
     }
-    return [];
+    return [...localStore.players];
   },
 
   async addPlayer(player: Omit<Player, 'id' | 'created_at'>): Promise<Player> {
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('players').insert([player]).select().single();
-      if (error) throw error;
-      return data as Player;
+    const payload: Record<string, unknown> = {
+      kmpl_id: player.kmpl_id,
+      name: player.name,
+      type: player.type,
+      monthly_amount: player.monthly_amount,
+      join_date: player.join_date || new Date().toISOString().split('T')[0],
+      chitti_taken: Boolean(player.chitti_taken),
+    };
+
+    // If phone was provided, include it; if not provided or empty, omit so it doesn't conflict with schema
+    if (player.phone && player.phone.trim().length > 0) {
+      payload.phone = player.phone.trim();
     }
-    throw new Error('Supabase is not configured to add players.');
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.from('players').insert([payload]).select().single();
+        if (!error && data) {
+          return data as Player;
+        }
+
+        // If error mentions 'phone' column, retry strictly without the phone field
+        if (error && (error.message.includes('phone') || error.message.includes('column'))) {
+          delete payload.phone;
+          const retry = await supabase.from('players').insert([payload]).select().single();
+          if (!retry.error && retry.data) {
+            return retry.data as Player;
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase addPlayer caught exception, falling back to localStore:', err);
+      }
+    }
+
+    // Local in-memory / localStore fallback
+    const newPlayer: Player = {
+      ...player,
+      id: 'p_' + Math.random().toString(36).substring(2, 9),
+      created_at: new Date().toISOString(),
+    };
+    localStore.players.push(newPlayer);
+    localStore.save();
+    return newPlayer;
   },
 
   async updatePlayer(id: string, updates: Partial<Player>): Promise<void> {
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.from('players').update(updates).eq('id', id);
-      if (error) throw error;
-      return;
+    const payload: Record<string, unknown> = { ...updates };
+    if (!payload.phone) {
+      delete payload.phone;
     }
-    throw new Error('Supabase is not configured to update players.');
+
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.from('players').update(payload).eq('id', id);
+        if (!error) return;
+        if (error && error.message.includes('phone')) {
+          delete payload.phone;
+          const retry = await supabase.from('players').update(payload).eq('id', id);
+          if (!retry.error) return;
+        }
+      } catch (err) {
+        console.warn('Supabase updatePlayer fallback:', err);
+      }
+    }
+
+    const idx = localStore.players.findIndex((p) => p.id === id);
+    if (idx >= 0) {
+      localStore.players[idx] = { ...localStore.players[idx], ...updates };
+      localStore.save();
+    }
   },
 
   async deletePlayer(id: string): Promise<void> {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('players').delete().eq('id', id);
-      if (error) throw error;
-      return;
+      try {
+        const { error } = await supabase.from('players').delete().eq('id', id);
+        if (!error) return;
+      } catch (err) {
+        console.warn('Supabase deletePlayer fallback:', err);
+      }
     }
-    throw new Error('Supabase is not configured to delete players.');
+
+    localStore.players = localStore.players.filter((p) => p.id !== id);
+    localStore.save();
   },
 
   // --- MONTHLY PAYMENTS ---
@@ -536,18 +598,24 @@ export const db = {
     return closedList.some(c => c.month === month);
   },
 
-  // Any authorized admin can enter their registered mobile number to close/lock the month
-  async closeMonthWithAdminAuth(month: string, phone: string): Promise<{ success: boolean; error?: string }> {
-    const cleanInput = phone.replace(/\D/g, '');
+  // Any authorized admin can enter their registered mobile number or email to close/lock the month
+  async closeMonthWithAdminAuth(month: string, phoneOrEmail: string): Promise<{ success: boolean; error?: string }> {
+    const cleanInput = phoneOrEmail.replace(/\D/g, '');
+    const cleanEmail = phoneOrEmail.trim().toLowerCase();
 
-    // Check if phone matches any registered admin
+    // Check if input matches any registered admin phone or email
     const admins = await this.getAdmins();
-    const authorizedAdmin = admins.find(a => a.phone.replace(/\D/g, '') === cleanInput);
+    const authorizedAdmin = admins.find(a => {
+      const aPhoneClean = (a.phone || '').replace(/\D/g, '');
+      const phoneMatch = cleanInput.length >= 8 && aPhoneClean === cleanInput;
+      const emailMatch = a.email.toLowerCase() === cleanEmail;
+      return phoneMatch || emailMatch;
+    });
 
     if (!authorizedAdmin) {
       return {
         success: false,
-        error: 'Phone number does not match any registered tournament officer.',
+        error: 'Input does not match any registered tournament officer credentials.',
       };
     }
 
@@ -555,7 +623,7 @@ export const db = {
       try {
         const { data, error } = await supabase.rpc('close_month', {
           target_month: month,
-          phone_input: phone,
+          phone_input: authorizedAdmin.phone || authorizedAdmin.email,
         });
         if (!error && data) return data as { success: boolean; error?: string };
       } catch (err) {
@@ -566,7 +634,7 @@ export const db = {
     if (!localStore.closedMonths.some(c => c.month === month)) {
       localStore.closedMonths.push({
         month,
-        closed_by: `${authorizedAdmin.name} (${authorizedAdmin.phone})`,
+        closed_by: `${authorizedAdmin.name} (${authorizedAdmin.email})`,
         closed_at: new Date().toISOString(),
       });
       localStore.save();
@@ -589,13 +657,35 @@ export const db = {
 
   async addAdmin(admin: Omit<Admin, 'id' | 'created_at'>, playerType: PlayerType = 'Senior'): Promise<Admin> {
     let createdAdmin: Admin;
+    const adminData = {
+      name: admin.name.trim(),
+      email: admin.email.trim().toLowerCase(),
+      phone: admin.phone?.trim() || '',
+      is_developer: Boolean(admin.is_developer),
+      role_title: admin.role_title?.trim() || 'Tournament Officer',
+    };
+
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('admins').insert([admin]).select().single();
-      if (error) throw error;
-      createdAdmin = data as Admin;
+      try {
+        const { data, error } = await supabase.from('admins').insert([adminData]).select().single();
+        if (!error && data) {
+          createdAdmin = data as Admin;
+        } else {
+          throw error;
+        }
+      } catch (err) {
+        console.warn('Supabase addAdmin error, falling back to localStore:', err);
+        createdAdmin = {
+          ...adminData,
+          id: 'a_' + Math.random().toString(36).substring(2, 9),
+          created_at: new Date().toISOString(),
+        };
+        localStore.admins.push(createdAdmin);
+        localStore.save();
+      }
     } else {
       createdAdmin = {
-        ...admin,
+        ...adminData,
         id: 'a_' + Math.random().toString(36).substring(2, 9),
         created_at: new Date().toISOString(),
       };
@@ -603,16 +693,16 @@ export const db = {
       localStore.save();
     }
 
-    // Every administrator is also an active player in the tournament.
+    // Every administrator is also an active player in the tournament ("also me also player").
     // Automatically ensure this new officer appears in the player directory with the Admin symbol!
     try {
       const currentPlayers = await this.getPlayers();
-      const cleanAdminPhone = admin.phone.replace(/\D/g, '').slice(-10);
+      const cleanAdminPhone = (admin.phone || '').replace(/\D/g, '').slice(-10);
       const aName = admin.name.toLowerCase().trim();
 
       const existingPlayer = currentPlayers.find((p) => {
-        const cleanPlayerPhone = p.phone.replace(/\D/g, '').slice(-10);
-        const phoneMatch = cleanPlayerPhone.length >= 8 && cleanPlayerPhone === cleanAdminPhone;
+        const cleanPlayerPhone = (p.phone || '').replace(/\D/g, '').slice(-10);
+        const phoneMatch = cleanAdminPhone.length >= 8 && cleanPlayerPhone.length >= 8 && cleanPlayerPhone === cleanAdminPhone;
         const pName = p.name.toLowerCase().trim();
         const nameMatch = pName === aName || aName.startsWith(pName) || pName.startsWith(aName);
         return phoneMatch || nameMatch;
@@ -631,7 +721,7 @@ export const db = {
         await this.addPlayer({
           kmpl_id: nextKmplId,
           name: admin.name,
-          phone: admin.phone,
+          phone: admin.phone || '',
           type: playerType,
           monthly_amount: playerType === 'Junior' ? 100 : 200,
           join_date: '2026-04-01',

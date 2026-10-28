@@ -336,7 +336,7 @@ export const AdminLoginPage: React.FC = () => {
                   {adminDisplayName}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                  {currentAdmin.email} • {currentAdmin.phone}
+                  {currentAdmin.email}{currentAdmin.phone ? ` • ${currentAdmin.phone}` : ''}
                 </p>
                 <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-1.5">
                   An active admin session is open on this device.

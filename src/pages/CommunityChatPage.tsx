@@ -95,10 +95,10 @@ export const CommunityChatPage: React.FC = () => {
    */
   const getAdminKmplId = (): string => {
     if (!currentAdmin) return 'ADMIN';
-    const cleanAdminPhone = currentAdmin.phone.replace(/\D/g, '').slice(-10);
+    const cleanAdminPhone = (currentAdmin.phone || '').replace(/\D/g, '').slice(-10);
     const p = players.find((player) => {
-      const cleanP = player.phone.replace(/\D/g, '').slice(-10);
-      return (cleanP.length >= 8 && cleanP === cleanAdminPhone) ||
+      const cleanP = (player.phone || '').replace(/\D/g, '').slice(-10);
+      return (cleanAdminPhone.length >= 8 && cleanP.length >= 8 && cleanP === cleanAdminPhone) ||
         player.name.toLowerCase().trim() === currentAdmin.name.toLowerCase().trim();
     });
     return p ? p.kmpl_id : 'KMPL-ADM';
@@ -290,7 +290,7 @@ export const CommunityChatPage: React.FC = () => {
     return (
       p.name.toLowerCase().includes(q) ||
       p.kmpl_id.toLowerCase().includes(q) ||
-      p.phone.includes(q)
+      (p.phone ? p.phone.includes(q) : false)
     );
   });
 
@@ -649,7 +649,7 @@ export const CommunityChatPage: React.FC = () => {
                             {player.name}
                           </span>
                           <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-                            {player.phone} · {player.type}
+                            {player.phone ? `${player.phone} · ` : ''}{player.type}
                           </span>
                         </div>
                       </div>

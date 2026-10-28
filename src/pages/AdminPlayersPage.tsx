@@ -42,7 +42,6 @@ export const AdminPlayersPage: React.FC = () => {
 
   // Form state
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [type, setType] = useState<PlayerType>('Senior');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -63,7 +62,6 @@ export const AdminPlayersPage: React.FC = () => {
   const handleOpenAdd = () => {
     setEditingPlayer(null);
     setName('');
-    setPhone('');
     setType('Senior');
     setIsModalOpen(true);
   };
@@ -71,7 +69,6 @@ export const AdminPlayersPage: React.FC = () => {
   const handleOpenEdit = (player: Player) => {
     setEditingPlayer(player);
     setName(player.name);
-    setPhone(player.phone);
     setType(player.type);
     setIsModalOpen(true);
   };
@@ -86,7 +83,6 @@ export const AdminPlayersPage: React.FC = () => {
       if (editingPlayer) {
         await db.updatePlayer(editingPlayer.id, {
           name: name.trim(),
-          phone: phone.trim(),
           type,
           monthly_amount: monthlyAmount,
         });
@@ -101,7 +97,6 @@ export const AdminPlayersPage: React.FC = () => {
         await db.addPlayer({
           kmpl_id: newKmplId,
           name: name.trim(),
-          phone: phone.trim(),
           type,
           monthly_amount: monthlyAmount,
           join_date: new Date().toISOString().split('T')[0],
@@ -158,7 +153,7 @@ export const AdminPlayersPage: React.FC = () => {
     (p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.kmpl_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.phone.includes(searchTerm)
+      (p.phone ? p.phone.includes(searchTerm) : false)
   );
 
   return (
@@ -265,7 +260,7 @@ export const AdminPlayersPage: React.FC = () => {
                     )}
                   </div>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    {player.phone} · <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{player.type}</strong> ({formatINR(player.monthly_amount)}/mo)
+                    {player.phone ? `${player.phone} · ` : ''}<strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{player.type}</strong> ({formatINR(player.monthly_amount)}/mo)
                   </span>
                 </div>
               </div>
@@ -339,7 +334,7 @@ export const AdminPlayersPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-1">
-                  {playerToDelete.phone} • {playerToDelete.type} tier ({formatINR(playerToDelete.monthly_amount)}/mo)
+                  {playerToDelete.phone ? `${playerToDelete.phone} • ` : ''}{playerToDelete.type} tier ({formatINR(playerToDelete.monthly_amount)}/mo)
                 </p>
               </div>
             </div>
@@ -414,20 +409,6 @@ export const AdminPlayersPage: React.FC = () => {
                   required
                   autoFocus
                   className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  {isKn ? 'ಮೊಬೈಲ್ ಸಂಖ್ಯೆ' : 'Mobile Number'}
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="10-digit mobile..."
-                  required
-                  className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl font-mono outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 

@@ -286,7 +286,7 @@ export const AdminBaddiPage: React.FC = () => {
                 </option>
                 {players.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} ({p.kmpl_id}) — {p.phone}
+                    {p.name} ({p.kmpl_id}){p.phone ? ` — ${p.phone}` : ''}
                   </option>
                 ))}
               </select>
