@@ -67,68 +67,29 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
         db.getAnnouncements(),
       ]);
 
-      // "also me also player": Ensure all tournament admins & Developer Sudeepa ML appear as players
-      const mergedPlayers = [...allPlayers];
-      allAdmins.forEach((admin) => {
-        const aName = admin.name.toLowerCase().trim();
-        const cleanAdminPhone = (admin.phone || '').replace(/\D/g, '').slice(-10);
-
-        const exists = mergedPlayers.some((p) => {
-          const pName = p.name.toLowerCase().trim();
-          const cleanPlayerPhone = (p.phone || '').replace(/\D/g, '').slice(-10);
-          const nameMatch = pName === aName || aName.startsWith(pName) || pName.startsWith(aName);
-          const phoneMatch = cleanAdminPhone.length >= 8 && cleanPlayerPhone.length >= 8 && cleanPlayerPhone === cleanAdminPhone;
+      // Keep administrator accounts separate from the tournament player roster.
+      // Never synthesize player records from admin profiles: monthly_payments.player_id
+      // must reference a real row in the players table, not an admin UUID.
+      const isAdminProfile = (player: Player) => {
+        const playerName = player.name.toLowerCase().trim();
+        const playerPhone = (player.phone || '').replace(/\\D/g, '').slice(-10);
+        return allAdmins.some((admin) => {
+          const adminName = admin.name.toLowerCase().trim();
+          const adminPhone = (admin.phone || '').replace(/\\D/g, '').slice(-10);
+          const nameMatch =
+            playerName === adminName ||
+            playerName.startsWith(adminName) ||
+            adminName.startsWith(playerName);
+          const phoneMatch =
+            playerPhone.length >= 8 &&
+            adminPhone.length >= 8 &&
+            playerPhone === adminPhone;
           return nameMatch || phoneMatch;
         });
+      };
 
-        if (!exists) {
-          let maxNum = 0;
-          mergedPlayers.forEach((p) => {
-            const m = p.kmpl_id.match(/KMPL(\d+)/i);
-            if (m && m[1]) {
-              const num = parseInt(m[1], 10);
-              if (num > maxNum) maxNum = num;
-            }
-          });
-          const nextKmplId = `KMPL${String(maxNum + 1).padStart(2, '0')}`;
-          mergedPlayers.push({
-            id: admin.id || `admin-player-${admin.name.toLowerCase().replace(/\s+/g, '-')}`,
-            kmpl_id: nextKmplId,
-            name: admin.name,
-            phone: admin.phone || '',
-            type: 'Senior',
-            monthly_amount: 200,
-            join_date: '2026-04-01',
-            chitti_taken: false,
-          });
-        }
-      });
-
-      // Also ensure Developer Sudeepa ML is explicitly included if not already
-      const hasDev = mergedPlayers.some((p) => p.name.toLowerCase().includes('sudeepa'));
-      if (!hasDev) {
-        let maxNum = 0;
-        mergedPlayers.forEach((p) => {
-          const m = p.kmpl_id.match(/KMPL(\d+)/i);
-          if (m && m[1]) {
-            const num = parseInt(m[1], 10);
-            if (num > maxNum) maxNum = num;
-          }
-        });
-        const nextKmplId = `KMPL${String(maxNum + 1).padStart(2, '0')}`;
-        mergedPlayers.unshift({
-          id: 'a1111111-1111-1111-1111-111111111111',
-          kmpl_id: nextKmplId,
-          name: 'Developer Sudeepa ML',
-          phone: '7760880282',
-          type: 'Senior',
-          monthly_amount: 200,
-          join_date: '2026-04-01',
-          chitti_taken: false,
-        });
-      }
-
-      setPlayers(mergedPlayers);
+      const rosterPlayers = allPlayers.filter((player) => !isAdminProfile(player));
+      setPlayers(rosterPlayers);
       setPayments(allPayments);
       setLoans(allLoans);
       setAdmins(allAdmins);
