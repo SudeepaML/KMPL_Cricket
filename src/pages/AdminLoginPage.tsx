@@ -7,6 +7,7 @@ import { Admin } from '../types';
 import { KmplLogo } from '../components/KmplLogo';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { RulesRegulationsModal } from '../components/RulesRegulationsModal';
+import { DatabaseSettingsModal } from '../components/DatabaseSettingsModal';
 import {
   Shield,
   Mail,
@@ -22,6 +23,7 @@ import {
   RefreshCw,
   UserCheck,
   ChevronDown,
+  Database,
 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
@@ -53,9 +55,10 @@ export const AdminLoginPage: React.FC = () => {
   const [authStatus, setAuthStatus] = useState<'idle' | 'success' | 'failed'>('idle');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Modals for public guides / rules
+  // Modals for public guides / rules / db setup
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [isDbSettingsOpen, setIsDbSettingsOpen] = useState(false);
 
   // Fetch authorized admins list on mount so any newly added admins are immediately available
   useEffect(() => {
@@ -591,12 +594,29 @@ export const AdminLoginPage: React.FC = () => {
         )}
 
         {/* Security Audit Footer */}
-        <div className="mt-8 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
+        <div className="mt-8 pt-5 border-t border-slate-100 dark:border-slate-800 text-center space-y-3">
           <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
             🛡️ <strong>KMPL Security Policy</strong>: To ensure 100% financial transparency and prevent unauthorized changes by players, data entry permissions are strictly granted only after Supabase Email OTP verification.
           </p>
+
+          <div className="pt-2 border-t border-dashed border-slate-200 dark:border-slate-800 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setIsDbSettingsOpen(true)}
+              className="text-xs font-semibold text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-400 flex items-center gap-1.5 transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Configure Supabase Credentials (Admin Setup)</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Database Settings Modal */}
+      <DatabaseSettingsModal
+        isOpen={isDbSettingsOpen}
+        onClose={() => setIsDbSettingsOpen(false)}
+      />
 
       {/* User Guide Modal */}
       <UserGuideModal

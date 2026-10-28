@@ -18,6 +18,8 @@ import { useRealtimeData } from '../hooks/useRealtimeData';
 import { db, formatINR, TOURNAMENT_MONTHS, DEVELOPER_INFO } from '../lib/database';
 import { DeveloperAuthModal } from '../components/DeveloperAuthModal';
 import { DeveloperProfileModal } from '../components/DeveloperProfileModal';
+import { DatabaseSettingsModal } from '../components/DatabaseSettingsModal';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { KmplLogo } from '../components/KmplLogo';
 import {
   CreditCard,
@@ -33,6 +35,7 @@ import {
   Sparkles,
   ExternalLink,
   ScrollText,
+  Database,
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -44,6 +47,7 @@ export const AdminDashboardPage: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isAddOfficerOpen, setIsAddOfficerOpen] = useState(false);
   const [isDevProfileOpen, setIsDevProfileOpen] = useState(false);
+  const [isDbSettingsOpen, setIsDbSettingsOpen] = useState(false);
 
   // New admin form state
   const [newName, setNewName] = useState('');
@@ -101,6 +105,18 @@ export const AdminDashboardPage: React.FC = () => {
                   <Shield className="w-3.5 h-3.5" />
                   <span>{isDeveloper ? 'Developer Super Admin' : 'Tournament Officer'}</span>
                 </span>
+                <button
+                  onClick={() => setIsDbSettingsOpen(true)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold transition-all border shadow-xs cursor-pointer ${
+                    isSupabaseConfigured
+                      ? 'bg-emerald-800/90 text-emerald-200 border-emerald-600/80 hover:bg-emerald-700'
+                      : 'bg-amber-400 text-emerald-950 border-amber-300 hover:bg-amber-300'
+                  }`}
+                  title="Configure Supabase Database"
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  <span>{isSupabaseConfigured ? 'Supabase Connected' : 'Setup Supabase'}</span>
+                </button>
                 <button
                   onClick={() => setIsDevProfileOpen(true)}
                   className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-white underline underline-offset-2"
@@ -321,6 +337,43 @@ export const AdminDashboardPage: React.FC = () => {
               Configure fund policies →
             </span>
           </Link>
+
+          {/* Action 7: Supabase Cloud Database Settings */}
+          <button
+            type="button"
+            onClick={() => setIsDbSettingsOpen(true)}
+            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-400 hover:shadow-md transition-all group flex flex-col justify-between text-left min-h-[140px] cursor-pointer"
+          >
+            <div>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform ${
+                isSupabaseConfigured
+                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300'
+              }`}>
+                <Database className="w-5 h-5" />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-emerald-900 dark:group-hover:text-emerald-400">
+                  Supabase Cloud Database
+                </h3>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  isSupabaseConfigured
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                    : 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                }`}>
+                  {isSupabaseConfigured ? 'Connected' : 'Local Mode'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {isSupabaseConfigured
+                  ? 'Manage PostgreSQL connection, audit logs, and realtime sync credentials.'
+                  : 'Configure your custom Supabase Project URL, anon API key, and realtime rules.'}
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mt-3 block">
+              Open database configuration →
+            </span>
+          </button>
         </div>
       </div>
 
@@ -481,13 +534,13 @@ export const AdminDashboardPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddOfficerOpen(false)}
-                  className="flex-1 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                  className="flex-1 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 h-10 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-sm"
+                  className="flex-1 h-10 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold shadow-sm cursor-pointer"
                 >
                   Save Officer
                 </button>
@@ -496,6 +549,12 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Database / Supabase Connection Modal */}
+      <DatabaseSettingsModal
+        isOpen={isDbSettingsOpen}
+        onClose={() => setIsDbSettingsOpen(false)}
+      />
     </div>
   );
 };

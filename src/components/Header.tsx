@@ -157,22 +157,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
               )}
             </button>
 
-            {/* Supabase Connection Status Trigger */}
-            <button
-              onClick={onOpenDbSettings}
-              title={isSupabaseConfigured ? 'Supabase Connected' : 'Demo Mode (Click to setup Supabase)'}
-              className={`p-1.5 sm:p-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 ${
-                isSupabaseConfigured
-                  ? 'bg-emerald-800/80 dark:bg-slate-800 text-emerald-200 hover:bg-emerald-800'
-                  : 'bg-amber-500/20 dark:bg-amber-500/30 text-amber-300 hover:bg-amber-500/30'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">
-                {isSupabaseConfigured ? 'Supabase' : 'Demo'}
-              </span>
-            </button>
-
             {/* Bilingual Toggle (EN / ಕನ್ನಡ) */}
             <button
               onClick={toggleLanguage}
@@ -187,6 +171,22 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             {/* Admin User / Login Action */}
             {isAdmin ? (
               <div className="flex items-center gap-1.5">
+                {/* Supabase Database Settings - strictly inside admin portal session */}
+                <button
+                  onClick={onOpenDbSettings}
+                  title={isSupabaseConfigured ? 'Supabase Connected' : 'Demo Mode (Click to setup Supabase)'}
+                  className={`p-1.5 sm:px-2 sm:py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer ${
+                    isSupabaseConfigured
+                      ? 'bg-emerald-800/90 text-emerald-200 hover:bg-emerald-700 border border-emerald-600/50'
+                      : 'bg-amber-400 text-emerald-950 hover:bg-amber-300 border border-amber-300'
+                  }`}
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">
+                    {isSupabaseConfigured ? 'Supabase' : 'Setup DB'}
+                  </span>
+                </button>
+
                 <Link
                   to="/admin"
                   className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 text-xs font-bold transition-all border border-emerald-700/60"
