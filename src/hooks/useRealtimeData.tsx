@@ -76,10 +76,9 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return allAdmins.some((admin) => {
           const adminName = admin.name.toLowerCase().trim();
           const adminPhone = (admin.phone || '').replace(/\\D/g, '').slice(-10);
-          const nameMatch =
-            playerName === adminName ||
-            playerName.startsWith(adminName) ||
-            adminName.startsWith(playerName);
+          const normalizedPlayerName = playerName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
+          const normalizedAdminName = adminName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
+          const nameMatch = normalizedPlayerName === normalizedAdminName;
           const phoneMatch =
             playerPhone.length >= 8 &&
             adminPhone.length >= 8 &&
@@ -172,9 +171,9 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const cleanAdminPhone = (a.phone || '').replace(/\D/g, '').slice(-10);
       const phoneMatch = cleanAdminPhone.length >= 8 && cleanPlayerPhone.length >= 8 && cleanAdminPhone === cleanPlayerPhone;
       const aName = a.name.toLowerCase().trim();
-      const nameMatch = aName === pName ||
-                        aName.startsWith(pName) ||
-                        pName.startsWith(aName);
+      const normalizedPlayerName = pName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
+      const normalizedAdminName = aName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
+      const nameMatch = normalizedAdminName === normalizedPlayerName;
       return phoneMatch || nameMatch;
     });
   }, [admins]);
