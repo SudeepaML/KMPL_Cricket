@@ -133,7 +133,7 @@ export const AdminBaddiPage: React.FC = () => {
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Admin Baddi Chitti Ledger
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Open for current and previous months. Upcoming months are locked with a live ticking countdown.
         </p>
         <div className="mt-2 text-xs text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/80 inline-flex items-center gap-1.5">
@@ -237,7 +237,7 @@ export const AdminBaddiPage: React.FC = () => {
           className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[44px] ${
             activeTab === 'borrow'
               ? 'bg-white text-slate-900 dark:text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:text-white'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Plus className="w-4 h-4 text-emerald-700" />
@@ -263,7 +263,7 @@ export const AdminBaddiPage: React.FC = () => {
       {/* Tab 1: Issue Loan Form */}
       {activeTab === 'borrow' && !isUpcoming && (
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xs">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white dark:text-white mb-1">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1">
             Issue New Baddi Chitti Loan for {selectedMonth}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
@@ -272,7 +272,7 @@ export const AdminBaddiPage: React.FC = () => {
 
           <form onSubmit={handleIssueLoan} className="space-y-4 max-w-lg">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 dark:text-slate-200 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">
                 Select Borrower (Player)
               </label>
               <select
@@ -293,7 +293,7 @@ export const AdminBaddiPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 dark:text-slate-200 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">
                 Principal Amount (₹)
               </label>
               <input
@@ -308,18 +308,18 @@ export const AdminBaddiPage: React.FC = () => {
             </div>
 
             {/* Live Calculation Preview Card */}
-            <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2 text-xs">
+            <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 space-y-2 text-xs">
               <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                 <span>Principal:</span>
                 <span className="font-bold font-mono">{formatINR(principalAmount)}</span>
               </div>
               <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                 <span>10% Tournament Interest:</span>
-                <span className="font-bold font-mono text-emerald-800">+ {formatINR(calculatedInterest)}</span>
+                <span className="font-bold font-mono text-emerald-800 dark:text-emerald-300">+ {formatINR(calculatedInterest)}</span>
               </div>
-              <div className="flex items-center justify-between text-slate-900 dark:text-white font-bold pt-2 border-t border-amber-200">
+              <div className="flex items-center justify-between text-slate-900 dark:text-white font-bold pt-2 border-t border-amber-200 dark:border-amber-800">
                 <span>Total Due on Repayment:</span>
-                <span className="text-base font-black font-mono text-amber-900">{formatINR(calculatedTotalReturn)}</span>
+                <span className="text-base font-black font-mono text-amber-900 dark:text-amber-200">{formatINR(calculatedTotalReturn)}</span>
               </div>
             </div>
 
@@ -348,7 +348,7 @@ export const AdminBaddiPage: React.FC = () => {
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
               Active Loans Awaiting Repayment
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Select an outstanding loan to record repayment settlement.
             </p>
           </div>
@@ -375,7 +375,7 @@ export const AdminBaddiPage: React.FC = () => {
                         {loan.status}
                       </span>
                     </div>
-                    <span className="text-xs text-slate-500 font-mono block mt-0.5">
+                    <span className="text-xs text-slate-500 dark:text-slate-300 font-mono block mt-0.5">
                       Lent: {loan.lending_month} · Due: {loan.due_date}
                       {loan.recorded_by ? ` · Officer: ${loan.recorded_by}` : ''}
                     </span>
@@ -441,7 +441,7 @@ export const AdminBaddiPage: React.FC = () => {
                     className={`py-2 rounded-xl text-xs font-bold border transition-colors ${
                       paymentMethod === 'Cash'
                         ? 'bg-emerald-800 text-white border-emerald-800'
-                        : 'bg-slate-50 text-slate-700 dark:text-slate-200 border-slate-200'
+                        : 'bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-100 border-slate-200 dark:border-slate-600'
                     }`}
                   >
                     Cash
