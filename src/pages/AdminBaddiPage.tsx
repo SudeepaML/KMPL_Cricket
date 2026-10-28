@@ -130,7 +130,7 @@ export const AdminBaddiPage: React.FC = () => {
     <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Admin Baddi Chitti Ledger
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -143,10 +143,10 @@ export const AdminBaddiPage: React.FC = () => {
       </div>
 
       {/* Month Selector */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-2xs mb-6">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xs mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
               Operating Month:
             </span>
             <select
@@ -157,12 +157,12 @@ export const AdminBaddiPage: React.FC = () => {
                   setActiveTab('borrow');
                 }
               }}
-              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
             >
               {TOURNAMENT_MONTHS.map((m) => {
                 const isFuture = isFutureMonth(m);
                 return (
-                  <option key={m} value={m}>
+                  <option key={m} value={m} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     {m} {isFuture ? '🔒 (Upcoming Locked)' : ''}
                   </option>
                 );
@@ -236,8 +236,8 @@ export const AdminBaddiPage: React.FC = () => {
           onClick={() => setActiveTab('borrow')}
           className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 min-h-[44px] ${
             activeTab === 'borrow'
-              ? 'bg-white text-slate-900 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white text-slate-900 dark:text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:text-white'
           }`}
         >
           <Plus className="w-4 h-4 text-emerald-700" />
@@ -251,8 +251,8 @@ export const AdminBaddiPage: React.FC = () => {
             isApril2026
               ? 'opacity-40 cursor-not-allowed text-slate-400'
               : activeTab === 'repay'
-              ? 'bg-white text-slate-900 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-white text-slate-900 dark:text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:text-white'
           }`}
         >
           <CircleDollarSign className="w-4 h-4 text-amber-600" />
@@ -262,30 +262,30 @@ export const AdminBaddiPage: React.FC = () => {
 
       {/* Tab 1: Issue Loan Form */}
       {activeTab === 'borrow' && !isUpcoming && (
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs">
-          <h2 className="text-base font-bold text-slate-900 mb-1">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xs">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white dark:text-white mb-1">
             Issue New Baddi Chitti Loan for {selectedMonth}
           </h2>
-          <p className="text-xs text-slate-500 mb-6">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
             10% interest rate applied automatically. Repayment is due on the 15th of the following month.
           </p>
 
           <form onSubmit={handleIssueLoan} className="space-y-4 max-w-lg">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 dark:text-slate-200 uppercase tracking-wider mb-1.5">
                 Select Borrower (Player)
               </label>
               <select
                 value={selectedPlayerId}
                 onChange={(e) => setSelectedPlayerId(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="">
+                <option value="" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                   {players.length === 0 ? 'No players yet — add members first' : 'Choose a member...'}
                 </option>
                 {players.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <option key={p.id} value={p.id} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                     {p.name} ({p.kmpl_id}){p.phone ? ` — ${p.phone}` : ''}
                   </option>
                 ))}
@@ -293,7 +293,7 @@ export const AdminBaddiPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 dark:text-slate-200 uppercase tracking-wider mb-1.5">
                 Principal Amount (₹)
               </label>
               <input
@@ -303,21 +303,21 @@ export const AdminBaddiPage: React.FC = () => {
                 value={principalAmount}
                 onChange={(e) => setPrincipalAmount(Number(e.target.value))}
                 required
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-base font-mono font-bold outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-base font-mono font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             {/* Live Calculation Preview Card */}
             <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-slate-600">
+              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                 <span>Principal:</span>
                 <span className="font-bold font-mono">{formatINR(principalAmount)}</span>
               </div>
-              <div className="flex items-center justify-between text-slate-600">
+              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                 <span>10% Tournament Interest:</span>
                 <span className="font-bold font-mono text-emerald-800">+ {formatINR(calculatedInterest)}</span>
               </div>
-              <div className="flex items-center justify-between text-slate-900 font-bold pt-2 border-t border-amber-200">
+              <div className="flex items-center justify-between text-slate-900 dark:text-white font-bold pt-2 border-t border-amber-200">
                 <span>Total Due on Repayment:</span>
                 <span className="text-base font-black font-mono text-amber-900">{formatINR(calculatedTotalReturn)}</span>
               </div>
@@ -343,9 +343,9 @@ export const AdminBaddiPage: React.FC = () => {
 
       {/* Tab 2: Repay Loan List */}
       {activeTab === 'repay' && !isApril2026 && !isUpcoming && (
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xs space-y-4">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xs space-y-4">
           <div>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
               Active Loans Awaiting Repayment
             </h2>
             <p className="text-xs text-slate-500">
@@ -362,11 +362,11 @@ export const AdminBaddiPage: React.FC = () => {
               {activeLoans.map((loan) => (
                 <div
                   key={loan.id}
-                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-sm">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm">
                         {loan.player_name}
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-0.2 rounded ${
@@ -384,7 +384,7 @@ export const AdminBaddiPage: React.FC = () => {
                   <div className="flex items-center justify-between sm:justify-end gap-4">
                     <div className="text-left sm:text-right">
                       <span className="text-[10px] text-slate-400 uppercase font-semibold block">Total Due</span>
-                      <span className="text-base font-black font-mono text-slate-900 block">
+                      <span className="text-base font-black font-mono text-slate-900 dark:text-white block">
                         {formatINR(loan.total_return)}
                       </span>
                     </div>
@@ -406,15 +406,15 @@ export const AdminBaddiPage: React.FC = () => {
       {/* Repayment Modal */}
       {repayLoanTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
-            <h3 className="text-base font-bold text-slate-900">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
               Record Loan Repayment
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Member: <strong className="text-slate-800">{repayLoanTarget.player_name}</strong>
             </p>
 
-            <div className="mt-3 p-3 rounded-xl bg-slate-50 font-mono text-xs space-y-1">
+            <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-mono text-xs space-y-1">
               <div className="flex justify-between">
                 <span>Principal:</span>
                 <span>{formatINR(repayLoanTarget.principal)}</span>
@@ -423,7 +423,7 @@ export const AdminBaddiPage: React.FC = () => {
                 <span>10% Interest:</span>
                 <span>+ {formatINR(repayLoanTarget.interest)}</span>
               </div>
-              <div className="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200">
+              <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-700">
                 <span>Total Return:</span>
                 <span>{formatINR(repayLoanTarget.total_return)}</span>
               </div>
@@ -431,7 +431,7 @@ export const AdminBaddiPage: React.FC = () => {
 
             <form onSubmit={handleConfirmRepayment} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
                   Payment Method
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -441,7 +441,7 @@ export const AdminBaddiPage: React.FC = () => {
                     className={`py-2 rounded-xl text-xs font-bold border transition-colors ${
                       paymentMethod === 'Cash'
                         ? 'bg-emerald-800 text-white border-emerald-800'
-                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                        : 'bg-slate-50 text-slate-700 dark:text-slate-200 border-slate-200'
                     }`}
                   >
                     Cash
@@ -452,7 +452,7 @@ export const AdminBaddiPage: React.FC = () => {
                     className={`py-2 rounded-xl text-xs font-bold border transition-colors ${
                       paymentMethod === 'UPI'
                         ? 'bg-emerald-800 text-white border-emerald-800'
-                        : 'bg-slate-50 text-slate-700 border-slate-200'
+                        : 'bg-slate-50 text-slate-700 dark:text-slate-200 border-slate-200'
                     }`}
                   >
                     UPI
@@ -462,7 +462,7 @@ export const AdminBaddiPage: React.FC = () => {
 
               {paymentMethod === 'UPI' && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
                     UPI Reference No (Optional)
                   </label>
                   <input
@@ -470,7 +470,7 @@ export const AdminBaddiPage: React.FC = () => {
                     value={upiRef}
                     onChange={(e) => setUpiRef(e.target.value)}
                     placeholder="e.g. UPI/20260515/8812"
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl font-mono"
+                    className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600 rounded-xl font-mono"
                   />
                 </div>
               )}
@@ -479,7 +479,7 @@ export const AdminBaddiPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRepayLoanTarget(null)}
-                  className="flex-1 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                  className="flex-1 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-semibold"
                 >
                   Cancel
                 </button>
