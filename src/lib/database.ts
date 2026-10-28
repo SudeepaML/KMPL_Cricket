@@ -290,6 +290,21 @@ class LocalStore {
 
 export const localStore = new LocalStore();
 
+/**
+ * Extracts a readable message from any thrown value.
+ * Supabase errors are plain objects (not `Error` instances), so
+ * `err instanceof Error` fails and the real cause gets hidden.
+ */
+export const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (err instanceof Error && err.message) return err.message;
+  if (err && typeof err === 'object') {
+    const e = err as { message?: string; details?: string; hint?: string; code?: string };
+    const parts = [e.message, e.details, e.hint].filter(Boolean);
+    if (parts.length) return `${parts.join(' | ')}${e.code ? ` (code ${e.code})` : ''}`;
+  }
+  return fallback;
+};
+
 export const db = {
   // --- PLAYERS ---
   /**
@@ -301,9 +316,9 @@ export const db = {
       try {
         const { data, error } = await supabase.from('players').select('*').order('kmpl_id');
         if (!error && data) {
-          const remoteIds = new Set(data.map((p) => p.id));
-          const localOnly = localStore.players.filter((p) => !remoteIds.has(p.id));
-          return [...(data as Player[]), ...localOnly];
+          // Only return real DB players; local-only "ghost" players have fake IDs
+          // that break payments and loans (player_id must be a real UUID)
+          return data as Player[];
         }
         if (error) {
           console.error('Error fetching players from Supabase:', error.message);
@@ -316,49 +331,25 @@ export const db = {
   },
 
   async addPlayer(player: Omit<Player, 'id' | 'created_at'>): Promise<Player> {
-    const payload: Record<string, unknown> = {
+    const payload = {
       kmpl_id: player.kmpl_id,
       name: player.name,
+      // phone is NOT NULL in the schema, so never omit it
+      phone: player.phone && player.phone.trim().length > 0 ? player.phone.trim() : '-',
       type: player.type,
       monthly_amount: player.monthly_amount,
       join_date: player.join_date || new Date().toISOString().split('T')[0],
       chitti_taken: Boolean(player.chitti_taken),
     };
 
-    // If phone was provided, include it; if not provided or empty, omit so it doesn't conflict with schema
-    if (player.phone && player.phone.trim().length > 0) {
-      payload.phone = player.phone.trim();
-    }
-
     if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase.from('players').insert([payload]).select().single();
-        if (!error && data) {
-          return data as Player;
-        }
-
-        // If error mentions 'phone' column, retry strictly without the phone field
-        if (error && (error.message.includes('phone') || error.message.includes('column'))) {
-          delete payload.phone;
-          const retry = await supabase.from('players').insert([payload]).select().single();
-          if (!retry.error && retry.data) {
-            return retry.data as Player;
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase addPlayer caught exception, falling back to localStore:', err);
-      }
+      const { data, error } = await supabase.from('players').insert([payload]).select().single();
+      // Surface the real error instead of silently saving a fake local player
+      if (error) throw error;
+      return data as Player;
     }
 
-    // Local in-memory / localStore fallback
-    const newPlayer: Player = {
-      ...player,
-      id: 'p_' + Math.random().toString(36).substring(2, 9),
-      created_at: new Date().toISOString(),
-    };
-    localStore.players.push(newPlayer);
-    localStore.save();
-    return newPlayer;
+    throw new Error('Supabase is not configured to add players.');
   },
 
   async updatePlayer(id: string, updates: Partial<Player>): Promise<void> {
