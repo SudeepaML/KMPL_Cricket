@@ -71,8 +71,8 @@ export const AdminBaddiPage: React.FC = () => {
       setStatusMessage({ type: 'error', text: 'Please select a player to issue the loan.' });
       return;
     }
-    if (principalAmount <= 0) {
-      setStatusMessage({ type: 'error', text: 'Principal amount must be greater than zero.' });
+    if (!Number.isFinite(principalAmount) || principalAmount <= 0 || principalAmount >= 100000) {
+      setStatusMessage({ type: 'error', text: 'Principal amount must be greater than ₹0 and less than ₹1,00,000.' });
       return;
     }
 
@@ -311,12 +311,13 @@ export const AdminBaddiPage: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1.5">
-                Principal Amount (₹)
+                Principal Amount (₹) · Any amount above ₹0 and below ₹1,00,000
               </label>
               <input
                 type="number"
-                step="500"
-                min="0"
+                step="any"
+                min="0.01"
+                max="99999.99"
                 value={principalAmount}
                 onChange={(e) => setPrincipalAmount(Number(e.target.value))}
                 required
