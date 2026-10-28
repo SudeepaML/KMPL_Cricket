@@ -91,6 +91,7 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       const rosterPlayers = allPlayers.filter((player) => !isAdminProfile(player));
 
+      setPlayers(rosterPlayers);
       setPayments(allPayments);
       setLoans(allLoans);
       setAdmins(allAdmins);
