@@ -11,7 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { useRealtimeData } from '../hooks/useRealtimeData';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { db, TOURNAMENT_MONTHS, formatINR, isFutureMonth, getMonthDeadlineDate } from '../lib/database';
+import { db, getErrorMessage, TOURNAMENT_MONTHS, formatINR, isFutureMonth, getMonthDeadlineDate } from '../lib/database';
 import { Player, MonthlyPayment } from '../types';
 import { CreditCard, CheckCircle2, Clock, Lock, Search, AlertCircle, Loader2, Shield } from 'lucide-react';
 
@@ -96,7 +96,7 @@ export const AdminCollectPage: React.FC = () => {
     } catch (err: unknown) {
       setStatusMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to update payment record.',
+        text: getErrorMessage(err, 'Failed to update payment record.'),
       });
     } finally {
       setProcessingId(null);

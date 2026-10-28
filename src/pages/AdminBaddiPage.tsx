@@ -12,7 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { useRealtimeData } from '../hooks/useRealtimeData';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { db, TOURNAMENT_MONTHS, formatINR, isFutureMonth, getMonthDeadlineDate } from '../lib/database';
+import { db, getErrorMessage, TOURNAMENT_MONTHS, formatINR, isFutureMonth, getMonthDeadlineDate } from '../lib/database';
 import { Loan, Player } from '../types';
 import { CircleDollarSign, Plus, CheckCircle2, Clock, AlertTriangle, CreditCard, Loader2, Lock, Shield, AlertCircle } from 'lucide-react';
 
@@ -94,7 +94,7 @@ export const AdminBaddiPage: React.FC = () => {
     } catch (err: unknown) {
       setStatusMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to issue loan.',
+        text: getErrorMessage(err, 'Failed to issue loan.'),
       });
     } finally {
       setIsSubmitting(false);
@@ -119,7 +119,7 @@ export const AdminBaddiPage: React.FC = () => {
     } catch (err: unknown) {
       setStatusMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to record repayment.',
+        text: getErrorMessage(err, 'Failed to record repayment.'),
       });
     } finally {
       setIsSubmitting(false);
