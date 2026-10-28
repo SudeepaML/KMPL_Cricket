@@ -33,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
   const [isDevModalOpen, setIsDevModalOpen] = useState(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const [isInfoMenuOpen, setIsInfoMenuOpen] = useState(false);
 
   return (
     <>
@@ -119,10 +120,24 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
 
           {/* Zone 3: Actions (Announcements beside Rules, Guide, Developer Profile, DB Settings, Theme, Language, Admin) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Compact mobile information menu; individual controls remain available on desktop. */}
+            <div className="relative lg:hidden">
+              <button type="button" onClick={() => setIsInfoMenuOpen((open) => !open)} aria-expanded={isInfoMenuOpen} className="p-2 rounded-lg bg-teal-800/80 text-white border border-teal-700/60 text-xs font-bold flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-amber-300" />
+                <span>Info</span>
+              </button>
+              {isInfoMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-56 p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-xl z-50">
+                  <Link to="/announcements" onClick={() => setIsInfoMenuOpen(false)} className="block p-3 rounded-lg text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{t.announcements}</Link>
+                  <button type="button" onClick={() => { setIsRulesModalOpen(true); setIsInfoMenuOpen(false); }} className="block w-full text-left p-3 rounded-lg text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{t.rulesAndRegulations}</button>
+                  <button type="button" onClick={() => { setIsGuideModalOpen(true); setIsInfoMenuOpen(false); }} className="block w-full text-left p-3 rounded-lg text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">{t.userGuide}</button>
+                </div>
+              )}
+            </div>
             {/* Announcements Button (Universal - beside rules & regulations) */}
             <Link
               to="/announcements"
-              className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-bold transition-colors border flex items-center gap-1.5 ${
+              className={`hidden lg:flex p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-bold transition-colors border items-center gap-1.5 ${
                 location.pathname === '/announcements'
                   ? 'bg-amber-400 text-slate-950 border-amber-300'
                   : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 hover:text-white border-amber-400/40'
@@ -138,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             {/* Rules & Regulations Button (Universal) */}
             <button
               onClick={() => setIsRulesModalOpen(true)}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-teal-800/80 dark:bg-teal-900/80 hover:bg-teal-700/90 text-teal-200 hover:text-white text-xs font-bold transition-colors border border-teal-700/60 dark:border-teal-800 flex items-center gap-1.5"
+              className="hidden lg:flex p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-teal-800/80 dark:bg-teal-900/80 hover:bg-teal-700/90 text-teal-200 hover:text-white text-xs font-bold transition-colors border border-teal-700/60 dark:border-teal-800 flex items-center gap-1.5"
               title={t.rulesAndRegulations}
               aria-label={t.rulesAndRegulations}
             >
@@ -150,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             {/* User Guide Button (Universal) */}
             <button
               onClick={() => setIsGuideModalOpen(true)}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-800/80 dark:bg-slate-800/90 hover:bg-emerald-700/90 text-emerald-200 hover:text-white text-xs font-bold transition-colors border border-emerald-700/60 dark:border-slate-700 flex items-center gap-1.5"
+              className="hidden lg:flex p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-800/80 dark:bg-slate-800/90 hover:bg-emerald-700/90 text-emerald-200 hover:text-white text-xs font-bold transition-colors border border-emerald-700/60 dark:border-slate-700 flex items-center gap-1.5"
               title={t.userGuide}
               aria-label={t.userGuide}
             >
@@ -162,7 +177,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             {/* Developer Portfolio Button */}
             <button
               onClick={() => setIsDevModalOpen(true)}
-              className="p-1.5 sm:px-2 sm:py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 text-xs font-bold transition-colors border border-amber-300/40 flex items-center gap-1 cursor-pointer"
+              className="order-last lg:order-none p-1.5 sm:px-2 sm:py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 text-xs font-bold transition-colors border border-amber-300/40 flex items-center gap-1 cursor-pointer"
               title="Developer Sudeepa ML Profile & Portfolio"
             >
               <Code2 className="w-3.5 h-3.5 text-amber-300" />
@@ -172,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             {/* Theme Toggle (Light / Dark) */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-800/80 dark:bg-slate-800 hover:bg-emerald-700 dark:hover:bg-slate-700 text-amber-300 text-xs font-bold transition-all border border-emerald-700/60 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="order-2 lg:order-none p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-800/80 dark:bg-slate-800 hover:bg-emerald-700 dark:hover:bg-slate-700 text-amber-300 text-xs font-bold transition-all border border-emerald-700/60 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer shadow-xs"
               title={isDark ? "Switch to Light Theme" : "Switch to Dark Theme"}
               aria-label="Toggle Dark and Light Mode"
             >
@@ -192,7 +207,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             {/* Bilingual Toggle (EN / ಕನ್ನಡ) */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg bg-emerald-800/90 dark:bg-slate-800 hover:bg-emerald-700 dark:hover:bg-slate-700 text-xs sm:text-xs font-bold text-white transition-colors border border-emerald-700/60 dark:border-slate-700"
+              className="order-3 lg:order-none flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg bg-emerald-800/90 dark:bg-slate-800 hover:bg-emerald-700 dark:hover:bg-slate-700 text-xs sm:text-xs font-bold text-white transition-colors border border-emerald-700/60 dark:border-slate-700"
               title="Toggle Language"
               aria-label="Toggle between English and Kannada"
             >
@@ -229,7 +244,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
                 </Link>
                 <Link
                   to="/admin/login"
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold transition-all shadow-sm"
+                  className="hidden lg:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold transition-all shadow-sm"
                   title="Admin Login Screen"
                 >
                   <Lock className="w-3.5 h-3.5" />
@@ -247,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             ) : (
               <Link
                 to="/admin/login"
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs sm:text-xs font-bold transition-all shadow-sm"
+                className="hidden lg:flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs sm:text-xs font-bold transition-all shadow-sm"
                 title="Admin Login - Credentials Required"
               >
                 <Lock className="w-3.5 h-3.5" />
