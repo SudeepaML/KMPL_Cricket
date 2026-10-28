@@ -12,7 +12,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRealtimeData } from '../hooks/useRealtimeData';
 import { useLanguage } from '../context/LanguageContext';
-import { db, formatINR } from '../lib/database';
+import { db, formatINR, getErrorMessage } from '../lib/database';
 import { Player, PlayerType } from '../types';
 import {
   UserPlus,
@@ -93,7 +93,15 @@ export const AdminPlayersPage: React.FC = () => {
             : `Updated player "${name.trim()}" successfully.`,
         });
       } else {
-        const newKmplId = getNextKmplId();
+        // Use the complete database roster when generating an ID. The UI roster
+        // intentionally hides admin profiles, but their existing player rows (if any)
+        // still occupy KMPL IDs in Supabase.
+        const allDatabasePlayers = await db.getPlayers();
+        const maxExistingNumber = allDatabasePlayers.reduce((max, player) => {
+          const match = player.kmpl_id.match(/KMPL(\\d+)/i);
+          return match?.[1] ? Math.max(max, Number(match[1])) : max;
+        }, 0);
+        const newKmplId = `KMPL${String(maxExistingNumber + 1).padStart(2, '0')}`;
         await db.addPlayer({
           kmpl_id: newKmplId,
           name: name.trim(),
@@ -116,7 +124,7 @@ export const AdminPlayersPage: React.FC = () => {
     } catch (err: unknown) {
       setStatusMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to save player record.',
+        text: getErrorMessage(err, 'Failed to save player record.'),
       });
     }
   };
