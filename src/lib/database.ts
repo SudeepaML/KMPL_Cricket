@@ -570,6 +570,27 @@ export const db = {
     throw new Error('Supabase is not configured to repay loans.');
   },
 
+  async deleteLoan(loanId: string): Promise<void> {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase is not configured to delete loans.');
+    }
+
+    const { data: loan, error: fetchError } = await supabase
+      .from('loans')
+      .select('id, lending_month')
+      .eq('id', loanId)
+      .single();
+    if (fetchError) throw fetchError;
+    if (!loan) throw new Error('Loan record was not found.');
+
+    if (await this.isMonthClosed(loan.lending_month)) {
+      throw new Error(`Baddi Chitti month ${loan.lending_month} is locked. This loan cannot be deleted.`);
+    }
+
+    const { error } = await supabase.from('loans').delete().eq('id', loanId);
+    if (error) throw error;
+  },
+
   // --- CLOSED MONTHS ---
   async getClosedMonths(): Promise<ClosedMonth[]> {
     if (isSupabaseConfigured) {
