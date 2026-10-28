@@ -241,7 +241,7 @@ export const AdminPlayersPage: React.FC = () => {
       <div className="space-y-2.5">
         {filtered.length === 0 ? (
           <div className="p-8 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
-            {isKn ? 'ಯಾವುದೇ ಆಟಗಾರರು ಕಂಡುಬಂದಿಲ್ಲ.' : 'No players found matching your search.'}
+            {players.length === 0 ? t.noPlayersYet : (isKn ? 'ಯಾವುದೇ ಆಟಗಾರರು ಕಂಡುಬಂದಿಲ್ಲ.' : 'No players found matching your search.')}
           </div>
         ) : (
           filtered.map((player) => (

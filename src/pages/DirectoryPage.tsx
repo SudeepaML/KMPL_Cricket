@@ -177,8 +177,14 @@ export const DirectoryPage: React.FC = () => {
       ) : filteredPlayers.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-8">
           <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300">No members match your search</h3>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try searching by first name, KMPL ID or mobile digits.</p>
+          <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300">
+            {players.length === 0 ? t.noPlayersYet : 'No members match your search'}
+          </h3>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            {players.length === 0
+              ? 'Add players from the admin panel to populate tournament roster.'
+              : 'Try searching by first name, KMPL ID or mobile digits.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-2.5">

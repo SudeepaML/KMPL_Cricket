@@ -225,13 +225,18 @@ export const AdminCollectPage: React.FC = () => {
 
       {/* Players Collection Roster */}
       <div className="space-y-3">
-        {filteredPlayers.map((player) => {
-          const currentPay = currentMonthPayments.get(player.id);
-          const isPaid = currentPay?.status === 'PAID';
-          const isAdmin = isPlayerAdmin(player);
-          const isProcessing = processingId === player.id;
+        {filteredPlayers.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl bg-white border border-slate-200 text-slate-500 text-sm">
+            {players.length === 0 ? t.noPlayersYet : 'No players match your search filter.'}
+          </div>
+        ) : (
+          filteredPlayers.map((player) => {
+            const currentPay = currentMonthPayments.get(player.id);
+            const isPaid = currentPay?.status === 'PAID';
+            const isAdmin = isPlayerAdmin(player);
+            const isProcessing = processingId === player.id;
 
-          return (
+            return (
             <div
               key={player.id}
               className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
@@ -313,7 +318,8 @@ export const AdminCollectPage: React.FC = () => {
               </div>
             </div>
           );
-        })}
+        })
+      )}
       </div>
 
       {/* UPI Reference Capture Dialog */}

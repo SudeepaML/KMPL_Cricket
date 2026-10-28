@@ -281,7 +281,9 @@ export const AdminBaddiPage: React.FC = () => {
                 required
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="">Choose a member...</option>
+                <option value="">
+                  {players.length === 0 ? 'No players yet — add members first' : 'Choose a member...'}
+                </option>
                 {players.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} ({p.kmpl_id}) — {p.phone}

@@ -623,7 +623,7 @@ export const CommunityChatPage: React.FC = () => {
             <div className="mt-3 overflow-y-auto flex-1 space-y-1.5 pr-1">
               {filteredPlayers.length === 0 ? (
                 <div className="text-center py-8 text-xs text-slate-400">
-                  No matching players found
+                  {players.length === 0 ? 'No players yet' : 'No matching players found'}
                 </div>
               ) : (
                 filteredPlayers.map((player) => {

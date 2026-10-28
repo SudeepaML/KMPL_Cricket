@@ -116,7 +116,7 @@ export const AlphabeticalDirectoryModal: React.FC<AlphabeticalDirectoryModalProp
         <div className="mt-3 overflow-y-auto flex-1 space-y-4 pr-1">
           {grouped.letters.length === 0 ? (
             <div className="text-center py-10 text-slate-400 text-sm">
-              No matching members found.
+              {players.length === 0 ? 'No players yet' : 'No matching members found.'}
             </div>
           ) : (
             grouped.letters

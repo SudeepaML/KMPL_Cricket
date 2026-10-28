@@ -11,6 +11,20 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { Player, PlayerType, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule, ChatMessage, Announcement } from '../types';
 
+// Clear any legacy localStorage or sessionStorage caching of players, payments, or loans
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem('kmpl_players');
+    localStorage.removeItem('kmpl_payments');
+    localStorage.removeItem('kmpl_loans');
+    sessionStorage.removeItem('kmpl_players');
+    sessionStorage.removeItem('kmpl_payments');
+    sessionStorage.removeItem('kmpl_loans');
+  } catch {
+    // Ignore storage errors in restricted contexts
+  }
+}
+
 // The 13 official months for the KMPL 2026-2027 tournament cycle
 export const TOURNAMENT_MONTHS: string[] = [
   'April 2026',
@@ -93,104 +107,7 @@ const SEED_ADMINS: Admin[] = [
   },
 ];
 
-const SEED_PLAYERS: Player[] = [
-  { id: 'p01', kmpl_id: 'KMPL01', name: 'Sudeepa ML', phone: '7760880282', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: true },
-  { id: 'p02', kmpl_id: 'KMPL02', name: 'Kiran Kumar K', phone: '9900112233', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p03', kmpl_id: 'KMPL03', name: 'Manjunath H', phone: '9844556677', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p04', kmpl_id: 'KMPL04', name: 'Ravi Gowda', phone: '9448123456', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: true },
-  { id: 'p05', kmpl_id: 'KMPL05', name: 'Chetan Kumar', phone: '9880123456', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p06', kmpl_id: 'KMPL06', name: 'Darshan M', phone: '9741234567', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p07', kmpl_id: 'KMPL07', name: 'Naveen Kumar', phone: '9611234567', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p08', kmpl_id: 'KMPL08', name: 'Praveen Gowda', phone: '9480234567', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p09', kmpl_id: 'KMPL09', name: 'Abhishek R', phone: '9986345678', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p10', kmpl_id: 'KMPL10', name: 'Shashank B', phone: '9845345678', type: 'Senior', monthly_amount: 200, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p11', kmpl_id: 'KMPL11', name: 'Varun Gowda', phone: '9731456789', type: 'Junior', monthly_amount: 100, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p12', kmpl_id: 'KMPL12', name: 'Yashwanth M', phone: '9620456789', type: 'Junior', monthly_amount: 100, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p13', kmpl_id: 'KMPL13', name: 'Girish K', phone: '9535567890', type: 'Junior', monthly_amount: 100, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p14', kmpl_id: 'KMPL14', name: 'Chandan S', phone: '9449567890', type: 'Junior', monthly_amount: 100, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p15', kmpl_id: 'KMPL15', name: 'Puneeth Kumar', phone: '9164678901', type: 'Junior', monthly_amount: 100, join_date: '2026-04-01', chitti_taken: false },
-  { id: 'p16', kmpl_id: 'KMPL16', name: 'Sharath Gowda', phone: '9008678901', type: 'Junior', monthly_amount: 100, join_date: '2026-04-01', chitti_taken: false },
-];
-
-const SEED_PAYMENTS: MonthlyPayment[] = [
-  { id: 'pay1', player_id: 'p01', month: 'April 2026', status: 'PAID', payment_method: 'UPI', upi_reference: 'UPI/20260405/9823412', paid_at: '2026-04-05T10:30:00Z', recorded_by: 'Developer Sudeepa ML' },
-  { id: 'pay2', player_id: 'p02', month: 'April 2026', status: 'PAID', payment_method: 'UPI', upi_reference: 'UPI/20260405/9823413', paid_at: '2026-04-05T11:00:00Z', recorded_by: 'Kiran Kumar (President)' },
-  { id: 'pay3', player_id: 'p03', month: 'April 2026', status: 'PAID', payment_method: 'Cash', paid_at: '2026-04-06T14:10:00Z', recorded_by: 'Manjunath H (Treasurer)' },
-  { id: 'pay4', player_id: 'p04', month: 'April 2026', status: 'PAID', payment_method: 'UPI', upi_reference: 'UPI/20260406/4412399', paid_at: '2026-04-06T15:20:00Z', recorded_by: 'Developer Sudeepa ML' },
-  { id: 'pay5', player_id: 'p05', month: 'April 2026', status: 'PAID', payment_method: 'UPI', upi_reference: 'UPI/20260407/7718223', paid_at: '2026-04-07T09:45:00Z', recorded_by: 'Kiran Kumar (President)' },
-  { id: 'pay6', player_id: 'p06', month: 'April 2026', status: 'PAID', payment_method: 'Cash', paid_at: '2026-04-08T16:00:00Z', recorded_by: 'Manjunath H (Treasurer)' },
-  { id: 'pay7', player_id: 'p07', month: 'April 2026', status: 'PAID', payment_method: 'Cash', paid_at: '2026-04-09T18:30:00Z', recorded_by: 'Developer Sudeepa ML' },
-  { id: 'pay8', player_id: 'p11', month: 'April 2026', status: 'PAID', payment_method: 'UPI', upi_reference: 'UPI/20260410/1199283', paid_at: '2026-04-10T12:00:00Z', recorded_by: 'Kiran Kumar (President)' },
-  { id: 'pay9', player_id: 'p12', month: 'April 2026', status: 'PAID', payment_method: 'UPI', upi_reference: 'UPI/20260411/5522119', paid_at: '2026-04-11T13:30:00Z', recorded_by: 'Manjunath H (Treasurer)' },
-  { id: 'pay10', player_id: 'p13', month: 'April 2026', status: 'PAID', payment_method: 'Cash', paid_at: '2026-04-12T17:15:00Z', recorded_by: 'Developer Sudeepa ML' },
-  { id: 'pay11', player_id: 'p08', month: 'April 2026', status: 'PENDING' },
-  { id: 'pay12', player_id: 'p09', month: 'April 2026', status: 'PENDING' },
-  { id: 'pay13', player_id: 'p10', month: 'April 2026', status: 'PENDING' },
-  { id: 'pay14', player_id: 'p14', month: 'April 2026', status: 'PENDING' },
-  { id: 'pay15', player_id: 'p15', month: 'April 2026', status: 'PENDING' },
-  { id: 'pay16', player_id: 'p16', month: 'April 2026', status: 'PENDING' },
-];
-
-const SEED_LOANS: Loan[] = [
-  {
-    id: 'l01',
-    player_id: 'p01',
-    player_name: 'Sudeepa ML',
-    principal: 10000,
-    interest: 1000,
-    total_return: 11000,
-    lending_month: 'April 2026',
-    repayment_month: 'May 2026',
-    due_date: '2026-05-15',
-    status: 'PAID',
-    payment_method: 'UPI',
-    upi_reference: 'UPI/20260514/9912001',
-    paid_at: '2026-05-14T11:20:00Z',
-    recorded_by: 'Kiran Kumar (President)',
-  },
-  {
-    id: 'l02',
-    player_id: 'p04',
-    player_name: 'Ravi Gowda',
-    principal: 5000,
-    interest: 500,
-    total_return: 5500,
-    lending_month: 'April 2026',
-    repayment_month: 'May 2026',
-    due_date: '2026-05-15',
-    status: 'ACTIVE',
-    recorded_by: 'Developer Sudeepa ML',
-  },
-  {
-    id: 'l03',
-    player_id: 'p06',
-    player_name: 'Darshan M',
-    principal: 8000,
-    interest: 800,
-    total_return: 8800,
-    lending_month: 'May 2026',
-    repayment_month: 'June 2026',
-    due_date: '2026-06-15',
-    status: 'PAID',
-    payment_method: 'Cash',
-    paid_at: '2026-06-12T15:40:00Z',
-    recorded_by: 'Manjunath H (Treasurer)',
-  },
-  {
-    id: 'l04',
-    player_id: 'p07',
-    player_name: 'Naveen Kumar',
-    principal: 6000,
-    interest: 600,
-    total_return: 6600,
-    lending_month: 'May 2026',
-    repayment_month: 'June 2026',
-    due_date: '2026-06-15',
-    status: 'ACTIVE',
-    recorded_by: 'Developer Sudeepa ML',
-  },
-];
-
+// No hardcoded, sample, mock or seed player, payment or loan data - always read live data from Supabase
 const SEED_CLOSED_MONTHS: ClosedMonth[] = [];
 
 export const SEED_RULES: FundRule[] = [
@@ -312,11 +229,11 @@ const SEED_ANNOUNCEMENTS: Announcement[] = [
   },
 ];
 
-// Local Storage In-Memory Reactive Store
+// Local Storage In-Memory Reactive Store (Admins, Rules, Chat, Announcements only)
 class LocalStore {
-  players: Player[];
-  payments: MonthlyPayment[];
-  loans: Loan[];
+  players: Player[] = [];
+  payments: MonthlyPayment[] = [];
+  loans: Loan[] = [];
   admins: Admin[];
   closedMonths: ClosedMonth[];
   rules: FundRule[];
@@ -325,60 +242,14 @@ class LocalStore {
   listeners: (() => void)[] = [];
 
   constructor() {
-    this.players = this.load('kmpl_players', SEED_PLAYERS);
-    this.payments = this.load('kmpl_payments', SEED_PAYMENTS);
-    this.loans = this.load('kmpl_loans', SEED_LOANS);
+    this.players = [];
+    this.payments = [];
+    this.loans = [];
     this.admins = this.load('kmpl_admins', SEED_ADMINS);
     this.closedMonths = this.load('kmpl_closed_months', SEED_CLOSED_MONTHS);
     this.rules = this.load('kmpl_rules', SEED_RULES);
     this.chatMessages = this.load('kmpl_chat_messages', SEED_CHAT_MESSAGES);
     this.announcements = this.load('kmpl_announcements', SEED_ANNOUNCEMENTS);
-    this.ensureAdminsInPlayers();
-    this.autoFlagOverdue();
-  }
-
-  ensureAdminsInPlayers() {
-    let changed = false;
-    let maxNum = 0;
-    this.players.forEach((p) => {
-      const match = p.kmpl_id.match(/KMPL(\d+)/i);
-      if (match && match[1]) {
-        const num = parseInt(match[1], 10);
-        if (num > maxNum) maxNum = num;
-      }
-    });
-
-    this.admins.forEach((admin) => {
-      const cleanAdminPhone = admin.phone.replace(/\D/g, '').slice(-10);
-      const aName = admin.name.toLowerCase().trim();
-      const existing = this.players.find((p) => {
-        const cleanPlayerPhone = p.phone.replace(/\D/g, '').slice(-10);
-        const phoneMatch = cleanPlayerPhone.length >= 8 && cleanPlayerPhone === cleanAdminPhone;
-        const pName = p.name.toLowerCase().trim();
-        const nameMatch = pName === aName || aName.startsWith(pName) || pName.startsWith(aName);
-        return phoneMatch || nameMatch;
-      });
-
-      if (!existing) {
-        maxNum += 1;
-        const newPlayer: Player = {
-          id: 'p_admin_' + admin.id,
-          kmpl_id: `KMPL${String(maxNum).padStart(2, '0')}`,
-          name: admin.name,
-          phone: admin.phone,
-          type: 'Senior',
-          monthly_amount: 200,
-          join_date: '2026-04-01',
-          chitti_taken: false,
-        };
-        this.players.push(newPlayer);
-        changed = true;
-      }
-    });
-
-    if (changed) {
-      this.save();
-    }
   }
 
   load<T>(key: string, defaultVal: T): T {
@@ -395,9 +266,8 @@ class LocalStore {
 
   save() {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('kmpl_players', JSON.stringify(this.players));
-    localStorage.setItem('kmpl_payments', JSON.stringify(this.payments));
-    localStorage.setItem('kmpl_loans', JSON.stringify(this.loans));
+    // Note: players, payments, and loans are NEVER stored in localStorage or sessionStorage.
+    // They are always read live from Supabase.
     localStorage.setItem('kmpl_admins', JSON.stringify(this.admins));
     localStorage.setItem('kmpl_closed_months', JSON.stringify(this.closedMonths));
     localStorage.setItem('kmpl_rules', JSON.stringify(this.rules));
@@ -416,104 +286,82 @@ class LocalStore {
   notify() {
     this.listeners.forEach(l => l());
   }
-
-  autoFlagOverdue() {
-    const today = new Date().toISOString().split('T')[0];
-    let changed = false;
-    this.loans.forEach(loan => {
-      if (loan.status === 'ACTIVE' && loan.due_date < today) {
-        loan.status = 'OVERDUE';
-        changed = true;
-      }
-    });
-    if (changed) this.save();
-  }
 }
 
 export const localStore = new LocalStore();
 
 export const db = {
   // --- PLAYERS ---
+  /**
+   * Fetches the live player roster from Supabase.
+   * Never falls back to sample or mock data; returns [] when empty or on error.
+   */
   async getPlayers(): Promise<Player[]> {
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.from('players').select('*').order('kmpl_id');
-        if (!error && data && data.length > 0) return data as Player[];
+        if (error) {
+          console.error('Error fetching players from Supabase:', error.message);
+          return [];
+        }
+        return (data as Player[]) || [];
       } catch (err) {
-        console.warn('Supabase players fallback to localStore:', err);
+        console.error('Supabase getPlayers exception:', err);
+        return [];
       }
     }
-    return [...localStore.players].sort((a, b) => a.kmpl_id.localeCompare(b.kmpl_id));
+    return [];
   },
 
   async addPlayer(player: Omit<Player, 'id' | 'created_at'>): Promise<Player> {
     if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase.from('players').insert([player]).select().single();
-        if (!error && data) return data as Player;
-      } catch (err) {
-        console.warn('Supabase insert player fallback to localStore:', err);
-      }
+      const { data, error } = await supabase.from('players').insert([player]).select().single();
+      if (error) throw error;
+      return data as Player;
     }
-    const newPlayer: Player = {
-      ...player,
-      id: 'p_' + Math.random().toString(36).substring(2, 9),
-      created_at: new Date().toISOString(),
-    };
-    localStore.players.push(newPlayer);
-    localStore.save();
-    return newPlayer;
+    throw new Error('Supabase is not configured to add players.');
   },
 
   async updatePlayer(id: string, updates: Partial<Player>): Promise<void> {
     if (isSupabaseConfigured) {
-      try {
-        const { error } = await supabase.from('players').update(updates).eq('id', id);
-        if (!error) return;
-      } catch (err) {
-        console.warn('Supabase update player fallback to localStore:', err);
-      }
+      const { error } = await supabase.from('players').update(updates).eq('id', id);
+      if (error) throw error;
+      return;
     }
-    const idx = localStore.players.findIndex(p => p.id === id);
-    if (idx !== -1) {
-      localStore.players[idx] = { ...localStore.players[idx], ...updates };
-      localStore.save();
-    }
+    throw new Error('Supabase is not configured to update players.');
   },
 
   async deletePlayer(id: string): Promise<void> {
     if (isSupabaseConfigured) {
-      try {
-        const { error } = await supabase.from('players').delete().eq('id', id);
-        if (error) {
-          console.warn('Supabase delete player notice:', error.message);
-        }
-      } catch (err) {
-        console.warn('Supabase delete player fallback to localStore:', err);
-      }
+      const { error } = await supabase.from('players').delete().eq('id', id);
+      if (error) throw error;
+      return;
     }
-    localStore.players = localStore.players.filter(p => p.id !== id);
-    localStore.payments = localStore.payments.filter(p => p.player_id !== id);
-    localStore.loans = localStore.loans.filter(l => l.player_id !== id);
-    localStore.save();
+    throw new Error('Supabase is not configured to delete players.');
   },
 
   // --- MONTHLY PAYMENTS ---
+  /**
+   * Fetches payments live from Supabase.
+   * Never falls back to sample or mock data; returns [] when empty or on error.
+   */
   async getPayments(month?: string): Promise<MonthlyPayment[]> {
     if (isSupabaseConfigured) {
       try {
         let query = supabase.from('monthly_payments').select('*');
         if (month) query = query.eq('month', month);
         const { data, error } = await query;
-        if (!error && data) return data as MonthlyPayment[];
+        if (error) {
+          console.error('Error fetching payments from Supabase:', error.message);
+          return [];
+        }
+        return (data as MonthlyPayment[]) || [];
       } catch (err) {
-        console.warn('Supabase payments fallback to localStore:', err);
+        console.error('Supabase getPayments exception:', err);
+        return [];
       }
     }
-    if (month) {
-      return localStore.payments.filter(p => p.month === month);
-    }
-    return [...localStore.payments];
+    return [];
   },
 
   async recordPayment(
@@ -554,39 +402,29 @@ export const db = {
       return data as MonthlyPayment;
     }
 
-    const existingIdx = localStore.payments.findIndex(
-      p => p.player_id === playerId && p.month === month
-    );
-    if (existingIdx !== -1) {
-      localStore.payments[existingIdx] = {
-        ...localStore.payments[existingIdx],
-        ...payload,
-      };
-      localStore.save();
-      return localStore.payments[existingIdx];
-    } else {
-      const newPay: MonthlyPayment = {
-        id: 'pay_' + Math.random().toString(36).substring(2, 9),
-        ...payload,
-      };
-      localStore.payments.push(newPay);
-      localStore.save();
-      return newPay;
-    }
+    throw new Error('Supabase is not configured to record payments.');
   },
 
   // --- BADDI CHITTI (LOANS) ---
+  /**
+   * Fetches loans live from Supabase.
+   * Never falls back to sample or mock data; returns [] when empty or on error.
+   */
   async getLoans(): Promise<Loan[]> {
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.from('loans').select('*').order('created_at', { ascending: false });
-        if (!error && data) return data as Loan[];
+        if (error) {
+          console.error('Error fetching loans from Supabase:', error.message);
+          return [];
+        }
+        return (data as Loan[]) || [];
       } catch (err) {
-        console.warn('Supabase loans fallback to localStore:', err);
+        console.error('Supabase getLoans exception:', err);
+        return [];
       }
     }
-    localStore.autoFlagOverdue();
-    return [...localStore.loans];
+    return [];
   },
 
   async issueLoan(
@@ -638,18 +476,7 @@ export const db = {
       return data as Loan;
     }
 
-    const newLoan: Loan = {
-      id: 'loan_' + Math.random().toString(36).substring(2, 9),
-      ...newLoanData,
-      created_at: new Date().toISOString(),
-    };
-    localStore.loans.unshift(newLoan);
-    const pIdx = localStore.players.findIndex(p => p.id === playerId);
-    if (pIdx !== -1) {
-      localStore.players[pIdx].chitti_taken = true;
-    }
-    localStore.save();
-    return newLoan;
+    throw new Error('Supabase is not configured to issue loans.');
   },
 
   async repayLoan(
@@ -688,19 +515,7 @@ export const db = {
       return;
     }
 
-    const idx = localStore.loans.findIndex(l => l.id === loanId);
-    if (idx !== -1) {
-      localStore.loans[idx] = { ...localStore.loans[idx], ...updatePayload };
-      const playerId = localStore.loans[idx].player_id;
-      const remainingActive = localStore.loans.filter(
-        l => l.player_id === playerId && (l.status === 'ACTIVE' || l.status === 'OVERDUE')
-      );
-      if (remainingActive.length === 0) {
-        const pIdx = localStore.players.findIndex(p => p.id === playerId);
-        if (pIdx !== -1) localStore.players[pIdx].chitti_taken = false;
-      }
-      localStore.save();
-    }
+    throw new Error('Supabase is not configured to repay loans.');
   },
 
   // --- CLOSED MONTHS ---

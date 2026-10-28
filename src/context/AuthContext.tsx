@@ -86,6 +86,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setCurrentAdmin(null);
             }
           }
+
+          // Validate that saved player identity exists in live Supabase players table
+          const livePlayers = await db.getPlayers();
+          if (currentPlayer && !livePlayers.some(p => p.id === currentPlayer.id)) {
+            setCurrentPlayer(null);
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('kmpl_current_player');
+            }
+          }
         } else {
           // Check session-scoped storage if using local dev fallback
           const savedAdmin = typeof window !== 'undefined' ? sessionStorage.getItem('kmpl_admin_session') : null;

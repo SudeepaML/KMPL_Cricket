@@ -112,6 +112,7 @@ export interface TranslationDictionary {
   announcementPostedSuccess: string;
   viewAllAnnouncements: string;
   latestAnnouncement: string;
+  noPlayersYet: string;
 }
 
 export const translations: Record<'en' | 'kn', TranslationDictionary> = {
@@ -221,6 +222,7 @@ export const translations: Record<'en' | 'kn', TranslationDictionary> = {
     announcementPostedSuccess: "Announcement published successfully!",
     viewAllAnnouncements: "View All Announcements",
     latestAnnouncement: "Latest Announcement",
+    noPlayersYet: "No players yet",
   },
   kn: {
     appTitle: "ಕೆಎಂಪಿಎಲ್ ಕ್ರಿಕೆಟ್",
@@ -328,5 +330,6 @@ export const translations: Record<'en' | 'kn', TranslationDictionary> = {
     announcementPostedSuccess: "ಪ್ರಕಟಣೆಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಪ್ರಕಟಿಸಲಾಗಿದೆ!",
     viewAllAnnouncements: "ಎಲ್ಲಾ ಪ್ರಕಟಣೆಗಳನ್ನು ನೋಡಿ",
     latestAnnouncement: "ಇತ್ತೀಚಿನ ಪ್ರಕಟಣೆ",
+    noPlayersYet: "ಯಾವುದೇ ಆಟಗಾರರು ಇನ್ನೂ ಇಲ್ಲ",
   }
 };

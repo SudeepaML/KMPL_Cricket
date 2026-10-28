@@ -221,7 +221,11 @@ export const MonthlyFundPage: React.FC = () => {
                 </span>
               </div>
 
-              {monthDetailData.pendingList.length === 0 ? (
+              {players.length === 0 ? (
+                <p className="text-xs text-slate-400 dark:text-slate-500 py-8 text-center">
+                  {t.noPlayersYet}
+                </p>
+              ) : monthDetailData.pendingList.length === 0 ? (
                 <div className="py-8 text-center text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                   🎉 All players have contributed for this month!
                 </div>

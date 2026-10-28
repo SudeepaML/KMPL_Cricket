@@ -22,7 +22,7 @@ import { formatINR, TOURNAMENT_MONTHS, isFutureMonth, getMonthDeadlineDate } fro
 import { CircleDollarSign, CheckCircle2, Clock, Lock, ArrowLeft, Share2, Calendar, AlertTriangle, ScrollText, BookOpen } from 'lucide-react';
 
 export const BaddiChittiPage: React.FC = () => {
-  const { loans, loading } = useRealtimeData();
+  const { loans, players, loading } = useRealtimeData();
   const { t } = useLanguage();
 
   const [activeMonthView, setActiveMonthView] = useState<string | null>(null);
@@ -186,8 +186,8 @@ export const BaddiChittiPage: React.FC = () => {
               </div>
 
               {monthDetailData.pendingList.length === 0 ? (
-                <div className="py-8 text-center text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-                  🎉 No pending loans for this month!
+                <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                  {players.length === 0 ? t.noPlayersYet : 'No active loans for this month.'}
                 </div>
               ) : (
                 <div className="space-y-2.5">
