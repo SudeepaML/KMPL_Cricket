@@ -25,7 +25,7 @@ export const AdminBaddiPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'borrow' | 'repay'>('borrow');
 
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
-  const [principalAmount, setPrincipalAmount] = useState<number>(5000);
+  const [principalAmount, setPrincipalAmount] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -89,7 +89,7 @@ export const AdminBaddiPage: React.FC = () => {
         text: `Issued Baddi Chitti loan of ${formatINR(principalAmount)} (+10% interest) to ${player.name} by ${officerName}.`,
       });
       setSelectedPlayerId('');
-      setPrincipalAmount(5000);
+      setPrincipalAmount(0);
       refetch();
     } catch (err: unknown) {
       setStatusMessage({
@@ -299,7 +299,7 @@ export const AdminBaddiPage: React.FC = () => {
               <input
                 type="number"
                 step="500"
-                min="500"
+                min="0"
                 value={principalAmount}
                 onChange={(e) => setPrincipalAmount(Number(e.target.value))}
                 required
