@@ -40,17 +40,23 @@ export const DirectoryPage: React.FC = () => {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  // Filter players based on name, KMPL ID, or phone
+  // Admins have their own portal and are not part of the public player directory.
+  const directoryPlayers = useMemo(
+    () => players.filter((player) => !getAdminForPlayer(player)),
+    [players, getAdminForPlayer]
+  );
+
+  // Filter the remaining players based on name, KMPL ID, or phone
   const filteredPlayers = useMemo(() => {
-    if (!searchTerm.trim()) return players;
+    if (!searchTerm.trim()) return directoryPlayers;
     const q = searchTerm.toLowerCase().trim();
-    return players.filter((p) => {
+    return directoryPlayers.filter((p) => {
       const matchName = p.name.toLowerCase().includes(q);
       const matchId = p.kmpl_id.toLowerCase().includes(q);
-      const matchPhone = p.phone ? p.phone.replace(/\D/g, '').includes(q.replace(/\D/g, '')) : false;
+      const matchPhone = p.phone ? p.phone.replace(/\\D/g, '').includes(q.replace(/\\D/g, '')) : false;
       return matchName || matchId || matchPhone;
     });
-  }, [players, searchTerm]);
+  }, [directoryPlayers, searchTerm]);
 
   const handlePlayerClick = (player: Player) => {
     if ((player.phone && player.phone.includes('7760880282')) || player.name.toLowerCase().includes('sudeepa')) {
@@ -102,7 +108,7 @@ export const DirectoryPage: React.FC = () => {
             </h2>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
               <Users className="w-3.5 h-3.5" />
-              <span>{players.length} {t.totalMembers}</span>
+              <span>{directoryPlayers.length} {t.totalMembers}</span>
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -178,10 +184,10 @@ export const DirectoryPage: React.FC = () => {
         <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-8">
           <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300">
-            {players.length === 0 ? t.noPlayersYet : 'No members match your search'}
+            {directoryPlayers.length === 0 ? t.noPlayersYet : 'No members match your search'}
           </h3>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {players.length === 0
+            {directoryPlayers.length === 0
               ? 'Add players from the admin panel to populate tournament roster.'
               : 'Try searching by first name, KMPL ID or mobile digits.'}
           </p>
@@ -306,7 +312,7 @@ export const DirectoryPage: React.FC = () => {
 
       <AlphabeticalDirectoryModal
         isOpen={isAlphabeticalOpen}
-        players={players}
+        players={directoryPlayers}
         isPlayerAdmin={isPlayerAdmin}
         onSelectPlayer={(p) => handlePlayerClick(p)}
         onClose={() => setIsAlphabeticalOpen(false)}
