@@ -107,6 +107,8 @@ export const CommunityChatPage: React.FC = () => {
   /**
    * Determine active sender credentials from logged-in admin or player.
    */
+  // Chat is open to everyone. Signed-in admins/players keep their existing identity;
+  // visitors can post without selecting a name or role.
   const activeSender = currentAdmin
     ? {
         name: currentAdmin.name,
@@ -119,7 +121,11 @@ export const CommunityChatPage: React.FC = () => {
         kmpl_id: currentPlayer.kmpl_id,
         is_admin: false,
       }
-    : null;
+    : {
+        name: 'Community Member',
+        kmpl_id: 'COMMUNITY',
+        is_admin: false,
+      };
 
   /**
    * Initial fetch of last 100 messages and Realtime setup.
@@ -319,49 +325,7 @@ export const CommunityChatPage: React.FC = () => {
             </div>
           </div>
 
-          {/* User Status / Identity Selector */}
-          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-            {currentAdmin ? (
-              <div className="flex items-center gap-2 bg-amber-400/20 border border-amber-300/40 rounded-xl px-2.5 py-1 text-xs">
-                <span className="text-amber-300 font-bold flex items-center gap-1">
-                  <span>👑</span>
-                  <span>{currentAdmin.name}</span>
-                </span>
-                <span className="text-[10px] bg-amber-400 text-emerald-950 font-black px-1.5 py-0.2 rounded">
-                  {getAdminKmplId()}
-                </span>
-              </div>
-            ) : currentPlayer ? (
-              <div className="flex items-center gap-2 bg-emerald-800/60 border border-emerald-600/50 rounded-xl px-2.5 py-1 text-xs">
-                <div className="flex items-center gap-1 text-emerald-200 font-bold">
-                  <UserCheck className="w-3.5 h-3.5 text-emerald-300" />
-                  <span className="truncate max-w-[120px]">{currentPlayer.name}</span>
-                  <span className="font-mono text-[10px] text-amber-300">({currentPlayer.kmpl_id})</span>
-                </div>
-                <button
-                  onClick={() => setIsPlayerModalOpen(true)}
-                  className="text-[10px] text-amber-300 hover:text-white underline underline-offset-2 cursor-pointer"
-                >
-                  {t.changePlayer}
-                </button>
-                <button
-                  onClick={logoutPlayer}
-                  className="text-[10px] text-rose-300 hover:text-white cursor-pointer ml-1"
-                  title="Clear Player Identity"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsPlayerModalOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>{t.identifyAsPlayer}</span>
-              </button>
-            )}
-          </div>
+
         </div>
       </div>
 
