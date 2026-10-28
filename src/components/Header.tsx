@@ -52,72 +52,48 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             </div>
           </Link>
 
-          {/* Zone 2: Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-emerald-100">
-            <Link
-              to="/chat"
-              className={`whitespace-nowrap transition-colors hover:text-white ${
-                location.pathname === '/chat' ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
-              }`}
-            >
-              {t.chat}
-            </Link>
-            <Link
-              to="/announcements"
-              className={`whitespace-nowrap transition-colors hover:text-white ${
-                location.pathname === '/announcements' ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
-              }`}
-            >
-              {t.announcements}
-            </Link>
-            <Link
-              to="/directory"
-              className={`whitespace-nowrap transition-colors hover:text-white ${
-                location.pathname === '/directory' ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
-              }`}
-            >
-              {t.directory}
-            </Link>
-            <Link
-              to="/fund"
-              className={`whitespace-nowrap transition-colors hover:text-white ${
-                location.pathname.startsWith('/fund') ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
-              }`}
-            >
-              {t.monthlyFund}
-            </Link>
-            <Link
-              to="/baddi"
-              className={`whitespace-nowrap transition-colors hover:text-white ${
-                location.pathname === '/baddi' ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
-              }`}
-            >
-              {t.baddiChitti}
-            </Link>
-            <Link
-              to="/report"
-              className={`whitespace-nowrap transition-colors hover:text-white ${
-                location.pathname === '/report' ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
-              }`}
-            >
-              {t.cumulativeReport}
-            </Link>
-            <Link
-              to={isAdmin ? "/admin" : "/admin/login"}
-              className={`whitespace-nowrap transition-colors flex items-center gap-1.5 hover:text-white ${
-                location.pathname.startsWith('/admin') ? 'text-amber-300 font-semibold underline underline-offset-4' : ''
-              }`}
-            >
-              {isAdmin ? <Shield className="w-3.5 h-3.5 text-amber-400" /> : <Lock className="w-3.5 h-3.5 text-amber-300/80" />}
-              <span>{t.adminPanel}</span>
-              {!isAdmin && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-800/80 dark:bg-slate-800 text-amber-300 border border-amber-300/30">
-                  Lock
-                </span>
-              )}
-            </Link>
+          {/* Zone 2: Desktop grouped portal menus */}
+          <nav className="hidden lg:flex items-center gap-2 text-sm font-medium text-emerald-100">
+            <div className="relative group">
+              <button type="button" className="px-3 py-2 rounded-lg hover:bg-emerald-800/80 dark:hover:bg-slate-800 font-bold">Community ▾</button>
+              <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full pt-2 w-52 z-50">
+                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-xl">
+                  <Link to="/chat" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Community Chat</Link>
+                  <Link to="/announcements" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.announcements}</Link>
+                </div>
+              </div>
+            </div>
+            <div className="relative group">
+              <button type="button" className="px-3 py-2 rounded-lg hover:bg-emerald-800/80 dark:hover:bg-slate-800 font-bold">Player Portal ▾</button>
+              <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full pt-2 w-56 z-50">
+                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-xl">
+                  <Link to="/directory" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.directory}</Link>
+                  <Link to="/fund" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.monthlyFund}</Link>
+                  <Link to="/baddi" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.baddiChitti}</Link>
+                  <Link to="/report" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.cumulativeReport}</Link>
+                </div>
+              </div>
+            </div>
+            <div className="relative group">
+              <button type="button" className="px-3 py-2 rounded-lg hover:bg-emerald-800/80 dark:hover:bg-slate-800 font-bold">Admin Portal ▾</button>
+              <div className="hidden group-hover:block group-focus-within:block absolute right-0 top-full pt-2 w-60 z-50">
+                <div className="p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-xl">
+                  {isAdmin ? (
+                    <>
+                      <Link to="/admin" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Admin Dashboard</Link>
+                      <Link to="/admin/collect" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Monthly Fund</Link>
+                      <Link to="/admin/baddi" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Baddi Chitti</Link>
+                      <Link to="/admin/players" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Manage Players</Link>
+                      <Link to="/admin/admins" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Manage Admins</Link>
+                      <Link to="/admin/rules" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Tournament Rules</Link>
+                    </>
+                  ) : (
+                    <Link to="/admin/login" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">Admin Portal Login</Link>
+                  )}
+                </div>
+              </div>
+            </div>
           </nav>
-
           {/* Zone 3: Actions (Announcements beside Rules, Guide, Developer Profile, DB Settings, Theme, Language, Admin) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Compact mobile information menu; individual controls remain available on desktop. */}
