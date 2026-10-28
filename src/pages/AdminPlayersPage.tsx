@@ -98,7 +98,7 @@ export const AdminPlayersPage: React.FC = () => {
         // still occupy KMPL IDs in Supabase.
         const allDatabasePlayers = await db.getPlayers();
         const maxExistingNumber = allDatabasePlayers.reduce((max, player) => {
-          const match = player.kmpl_id.match(/KMPL(\\d+)/i);
+          const match = player.kmpl_id.match(/KMPL(\d+)/i);
           return match?.[1] ? Math.max(max, Number(match[1])) : max;
         }, 0);
         const newKmplId = `KMPL${String(maxExistingNumber + 1).padStart(2, '0')}`;
