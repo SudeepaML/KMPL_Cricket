@@ -67,28 +67,30 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
         db.getAnnouncements(),
       ]);
 
-      // Keep administrator accounts separate from the tournament player roster.
-      // Never synthesize player records from admin profiles: monthly_payments.player_id
-      // must reference a real row in the players table, not an admin UUID.
+      // Admin accounts are stored separately. Player phone numbers are not collected,
+      // so match only on normalized names and never synthesize admin player rows.
+      const normalizeName = (value: string) =>
+        value
+          .toLowerCase()
+          .replace(/\\([^)]*\\)/g, ' ')
+          .replace(/^developer\\s+/, '')
+          .replace(/\\s+/g, ' ')
+          .trim();
+
       const isAdminProfile = (player: Player) => {
-        const playerName = player.name.toLowerCase().trim();
-        const playerPhone = (player.phone || '').replace(/\\D/g, '').slice(-10);
+        const playerName = normalizeName(player.name);
         return allAdmins.some((admin) => {
-          const adminName = admin.name.toLowerCase().trim();
-          const adminPhone = (admin.phone || '').replace(/\\D/g, '').slice(-10);
-          const normalizedPlayerName = playerName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
-          const normalizedAdminName = adminName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
-          const nameMatch = normalizedPlayerName === normalizedAdminName;
-          const phoneMatch =
-            playerPhone.length >= 8 &&
-            adminPhone.length >= 8 &&
-            playerPhone === adminPhone;
-          return nameMatch || phoneMatch;
+          const adminName = normalizeName(admin.name);
+          return (
+            playerName === adminName ||
+            playerName.startsWith(`${adminName} `) ||
+            adminName.startsWith(`${playerName} `)
+          );
         });
       };
 
       const rosterPlayers = allPlayers.filter((player) => !isAdminProfile(player));
-      setPlayers(rosterPlayers);
+
       setPayments(allPayments);
       setLoans(allLoans);
       setAdmins(allAdmins);
@@ -163,18 +165,24 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   })();
 
-  // Helper to find the Admin profile matching a Player (by phone or name)
+  // Match admin profiles by name only; player phone numbers are not stored.
+  const normalizeName = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/\\([^)]*\\)/g, ' ')
+      .replace(/^developer\\s+/, '')
+      .replace(/\\s+/g, ' ')
+      .trim();
+
   const getAdminForPlayer = useCallback((player: Player): Admin | undefined => {
-    const cleanPlayerPhone = (player.phone || '').replace(/\D/g, '').slice(-10);
-    const pName = player.name.toLowerCase().trim();
-    return admins.find(a => {
-      const cleanAdminPhone = (a.phone || '').replace(/\D/g, '').slice(-10);
-      const phoneMatch = cleanAdminPhone.length >= 8 && cleanPlayerPhone.length >= 8 && cleanAdminPhone === cleanPlayerPhone;
-      const aName = a.name.toLowerCase().trim();
-      const normalizedPlayerName = pName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
-      const normalizedAdminName = aName.replace(/\\s*\\([^)]*\\)\\s*/g, ' ').replace(/\\s+/g, ' ').trim();
-      const nameMatch = normalizedAdminName === normalizedPlayerName;
-      return phoneMatch || nameMatch;
+    const playerName = normalizeName(player.name);
+    return admins.find((admin) => {
+      const adminName = normalizeName(admin.name);
+      return (
+        playerName === adminName ||
+        playerName.startsWith(`${adminName} `) ||
+        adminName.startsWith(`${playerName} `)
+      );
     });
   }, [admins]);
 
