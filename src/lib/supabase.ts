@@ -16,8 +16,15 @@ const getSupabaseCredentials = () => {
   const localUrl = typeof window !== 'undefined' ? localStorage.getItem('kmpl_supabase_url') : null;
   const localKey = typeof window !== 'undefined' ? localStorage.getItem('kmpl_supabase_key') : null;
 
-  const url = (localUrl && localUrl.trim().length > 0) ? localUrl.trim() : (envUrl && envUrl.trim().length > 0 ? envUrl.trim() : '');
-  const key = (localKey && localKey.trim().length > 0) ? localKey.trim() : (envKey && envKey.trim().length > 0 ? envKey.trim() : '');
+  const defaultUrl = 'https://kcykgmlwsxoddxhurosp.supabase.co';
+  const defaultKey = 'sb_publishable_rQCSjezgp7VxiinQjDbMPg_BtBTBFqW';
+
+  const url = (localUrl && localUrl.trim().length > 0) 
+    ? localUrl.trim() 
+    : (envUrl && envUrl.trim().length > 0 ? envUrl.trim() : defaultUrl);
+  const key = (localKey && localKey.trim().length > 0) 
+    ? localKey.trim() 
+    : (envKey && envKey.trim().length > 0 ? envKey.trim() : defaultKey);
 
   const isValid = Boolean(
     url && 

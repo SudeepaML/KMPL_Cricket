@@ -7,11 +7,11 @@
  * visible to all players and villagers in bilingual Kannada/English.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { useRealtimeData } from '../hooks/useRealtimeData';
+import { db } from '../lib/database';
 import { KmplLogo } from './KmplLogo';
 import { FundRule, RuleCategory } from '../types';
 import {
@@ -36,7 +36,18 @@ interface RulesRegulationsModalProps {
 export const RulesRegulationsModal: React.FC<RulesRegulationsModalProps> = ({ isOpen, onClose }) => {
   const { language, setLanguage, t } = useLanguage();
   const { isAdmin } = useAuth();
-  const { rules } = useRealtimeData();
+  // Fix: Do not subscribe to Supabase Realtime inside this modal.
+  // Instead, fetch rules directly when the modal is opened.
+  const [rules, setRules] = useState<FundRule[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      db.getRules().then(setRules).catch(err => {
+        console.warn('Failed to load rules for modal:', err);
+      });
+    }
+  }, [isOpen]);
+
   const [selectedCategory, setSelectedCategory] = useState<RuleCategory | 'all'>('all');
   const [copied, setCopied] = useState(false);
 

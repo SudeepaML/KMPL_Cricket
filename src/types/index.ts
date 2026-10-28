@@ -86,3 +86,4 @@ export interface FundRule {
 }
 
 export type Language = 'en' | 'kn';
+

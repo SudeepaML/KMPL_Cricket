@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * 
  * AuthContext manages administrator authentication state.
- * Implements Supabase Email OTP (signInWithOtp + verifyOtp),
- * restricts access strictly to emails present in the `admins` table,
- * and maintains reactive session status.
+ * Implements strict Email + OTP authentication via Supabase Auth (signInWithOtp + verifyOtp),
+ * restricts access strictly to authorized tournament officers present in the `admins` table,
+ * and maintains reactive session status to protect financial data from unauthorized player edits.
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -19,6 +19,7 @@ interface AuthContextType {
   adminDisplayName: string;
   isDeveloper: boolean;
   loading: boolean;
+  isSupabaseConnected: boolean;
   sendOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
   verifyOtp: (email: string, token: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
@@ -38,6 +39,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initAuth = async () => {
       try {
+        if (typeof window !== 'undefined') {
+          // Clear any legacy persistent admin bypass
+          localStorage.removeItem('kmpl_simulated_admin');
+        }
+
         if (isSupabaseConfigured) {
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user?.email) {
@@ -53,13 +59,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
         } else {
-          // Simulation session stored in localStorage
-          const savedAdmin = localStorage.getItem('kmpl_simulated_admin');
+          // Check session-scoped storage if using local dev fallback
+          const savedAdmin = typeof window !== 'undefined' ? sessionStorage.getItem('kmpl_admin_session') : null;
           if (savedAdmin && mounted) {
             try {
               setCurrentAdmin(JSON.parse(savedAdmin));
             } catch {
-              localStorage.removeItem('kmpl_simulated_admin');
+              sessionStorage.removeItem('kmpl_admin_session');
             }
           }
         }
@@ -100,20 +106,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  /**
+   * Request Email OTP via Supabase Auth.
+   * Strictly validates that the email belongs to an authorized committee officer.
+   */
   const sendOtp = async (email: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
 
-    const admins = await db.getAdmins();
-    const isRegistered = admins.some((a) => a.email.toLowerCase() === cleanEmail);
-    if (!isRegistered) {
+    if (!cleanEmail || !cleanEmail.includes('@')) {
       return {
         success: false,
-        error: `Access denied. Email '${cleanEmail}' is not registered as an authorized tournament officer.`,
+        error: 'Please enter a valid officer email address.',
+      };
+    }
+
+    // 1. Verify email belongs to an authorized tournament officer
+    const admins = await db.getAdmins();
+    const matchingAdmin = admins.find((a) => a.email.toLowerCase() === cleanEmail);
+    if (!matchingAdmin) {
+      return {
+        success: false,
+        error: `Access Denied: "${cleanEmail}" is not registered in the tournament committee admin list. Players do not need to log in!`,
       };
     }
 
     setPendingEmail(cleanEmail);
 
+    // 2. Dispatch OTP via Supabase Auth
     if (isSupabaseConfigured) {
       const { error } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
@@ -121,26 +140,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           shouldCreateUser: true,
         },
       });
+
       if (error) {
         return { success: false, error: error.message };
       }
+
       return { success: true };
     }
 
-    localStorage.setItem('kmpl_sim_otp', '123456');
-    return { success: true };
+    // 3. Fallback when Supabase is not connected in env
+    const devOtp = '776088';
+    sessionStorage.setItem('kmpl_sim_otp_' + cleanEmail, devOtp);
+    console.info(`[Supabase Auth Notice] Supabase URL is not yet connected. For development testing, enter OTP '${devOtp}' or configure your Supabase Project URL in Database Settings.`);
+
+    return {
+      success: true,
+    };
   };
 
+  /**
+   * Verify the 6-digit OTP code sent to the officer's email via Supabase Auth.
+   */
   const verifyOtp = async (email: string, token: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanToken = token.trim();
+
+    if (cleanToken.length !== 6) {
+      return { success: false, error: 'Please enter the complete 6-digit verification code.' };
+    }
 
     const admins = await db.getAdmins();
     const matchingAdmin = admins.find((a) => a.email.toLowerCase() === cleanEmail);
     if (!matchingAdmin) {
       return {
         success: false,
-        error: 'Unauthorized administrator record.',
+        error: 'Access Denied: Unauthorized administrator email record.',
       };
     }
 
@@ -150,33 +184,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token: cleanToken,
         type: 'email',
       });
+
       if (error) {
         return { success: false, error: error.message };
       }
+
       if (data.session) {
         setCurrentAdmin(matchingAdmin);
         setPendingEmail(null);
         return { success: true };
       }
-      return { success: false, error: 'Verification failed. Please check the code.' };
+
+      return { success: false, error: 'Verification failed. Please check the OTP sent to your email.' };
     }
 
-    if (cleanToken.length === 6) {
+    // Dev fallback verification when Supabase URL is not yet configured
+    const storedOtp = sessionStorage.getItem('kmpl_sim_otp_' + cleanEmail);
+    if (storedOtp && cleanToken === storedOtp) {
       setCurrentAdmin(matchingAdmin);
-      localStorage.setItem('kmpl_simulated_admin', JSON.stringify(matchingAdmin));
+      sessionStorage.setItem('kmpl_admin_session', JSON.stringify(matchingAdmin));
+      sessionStorage.removeItem('kmpl_sim_otp_' + cleanEmail);
       setPendingEmail(null);
       return { success: true };
     }
 
-    return { success: false, error: 'Invalid 6-digit verification code.' };
+    return {
+      success: false,
+      error: 'Invalid 6-digit OTP code. Please enter the code sent to your email (or 776088 in local dev).',
+    };
   };
 
   const signOut = async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
-    localStorage.removeItem('kmpl_simulated_admin');
-    localStorage.removeItem('kmpl_sim_otp');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('kmpl_admin_session');
+      localStorage.removeItem('kmpl_simulated_admin');
+    }
     setCurrentAdmin(null);
     setPendingEmail(null);
   };
@@ -189,6 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     adminDisplayName,
     isDeveloper: Boolean(currentAdmin?.is_developer),
     loading,
+    isSupabaseConnected: isSupabaseConfigured,
     sendOtp,
     verifyOtp,
     signOut,

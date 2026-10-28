@@ -72,6 +72,15 @@ export interface TranslationDictionary {
   authSuccess: string;
   authFailed: string;
   manageRules: string;
+  officerIdentifier: string;
+  officerPinOrPassword: string;
+  enterCredentials: string;
+  lockSession: string;
+  lockAndExit: string;
+  officerEmailLabel: string;
+  sendEmailOtp: string;
+  emailOtpNotice: string;
+  checkInboxMessage: string;
 }
 
 export const translations: Record<'en' | 'kn', TranslationDictionary> = {
@@ -141,6 +150,15 @@ export const translations: Record<'en' | 'kn', TranslationDictionary> = {
     authSuccess: "Authentication Successful",
     authFailed: "Authentication Failed",
     manageRules: "Fund Rules & Regulations",
+    officerIdentifier: "Registered Officer Email or Phone",
+    officerPinOrPassword: "Officer Security PIN / Password",
+    enterCredentials: "Enter Admin Credentials",
+    lockSession: "Lock Session",
+    lockAndExit: "Lock & Sign Out",
+    officerEmailLabel: "Officer Registered Email Address",
+    sendEmailOtp: "Send OTP to Email",
+    emailOtpNotice: "Supabase Email OTP Authentication",
+    checkInboxMessage: "Check your email inbox for the 6-digit OTP code sent via Supabase.",
   },
   kn: {
     appTitle: "ಕೆಎಂಪಿಎಲ್ ಕ್ರಿಕೆಟ್",
@@ -208,5 +226,14 @@ export const translations: Record<'en' | 'kn', TranslationDictionary> = {
     authSuccess: "ದೃಢೀಕರಣ ಯಶಸ್ವಿಯಾಗಿದೆ",
     authFailed: "ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ",
     manageRules: "ಫಂಡ್ ನಿಯಮಗಳ ನಿರ್ವಹಣೆ",
+    officerIdentifier: "ನೋಂದಾಯಿತ ಅಧಿಕಾರಿಯ ಇಮೇಲ್ ಅಥವಾ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
+    officerPinOrPassword: "ಅಧಿಕಾರಿ ಸೆಕ್ಯೂರಿಟಿ ಪಿನ್ / ಪಾಸ್‌ವರ್ಡ್",
+    enterCredentials: "ಅಡ್ಮಿನ್ ರುಜುವಾತು ನಮೂದಿಸಿ",
+    lockSession: "ಲಾಕ್ ಮಾಡಿ",
+    lockAndExit: "ಲಾಕ್ ಮಾಡಿ ನಿರ್ಗಮಿಸಿ",
+    officerEmailLabel: "ನೋಂದಾಯಿತ ಅಧಿಕಾರಿಯ ಇಮೇಲ್ ವಿಳಾಸ",
+    sendEmailOtp: "ಇಮೇಲ್‌ಗೆ ಒಟಿಪಿ ಕಳುಹಿಸಿ",
+    emailOtpNotice: "ಸುಪಬೇಸ್ ಇಮೇಲ್ ಒಟಿಪಿ ದೃಢೀಕರಣ",
+    checkInboxMessage: "ಸುಪಬೇಸ್ ಮೂಲಕ ನಿಮ್ಮ ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಲಾದ 6-ಅಂಕಿಯ ಒಟಿಪಿ ಕೋಡ್ ಪರಿಶೀಲಿಸಿ.",
   }
 };

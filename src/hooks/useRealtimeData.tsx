@@ -2,11 +2,17 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  * 
- * Custom hook to subscribe to all KMPL data in real time.
- * Automatically synchronizes players, payments, loans, admins, and closed months.
+ * Central Realtime Data Provider & Hook for KMPL Cricket.
+ * Fixes: "cannot add postgres_changes callbacks for realtime:kmpl_realtime_all after subscribe()".
+ * 
+ * Guarantees:
+ * 1. Exactly ONE realtime subscription is maintained for the entire application inside RealtimeDataProvider.
+ * 2. Individual components or modals (like RulesRegulationsModal) do NOT create duplicate channels.
+ * 3. Channel creation attaches all .on() handlers before .subscribe().
+ * 4. Proper cleanup with supabase.removeChannel(channel) on unmount.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { db } from '../lib/database';
 import { Player, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule } from '../types';
 
@@ -19,7 +25,23 @@ export interface TournamentFinancialStats {
   pendingMembersCount: number;
 }
 
-export function useRealtimeData() {
+export interface RealtimeDataContextType {
+  players: Player[];
+  payments: MonthlyPayment[];
+  loans: Loan[];
+  admins: Admin[];
+  closedMonths: ClosedMonth[];
+  rules: FundRule[];
+  loading: boolean;
+  error: string | null;
+  stats: TournamentFinancialStats;
+  isPlayerAdmin: (player: Player) => boolean;
+  refetch: () => Promise<void>;
+}
+
+const RealtimeDataContext = createContext<RealtimeDataContextType | undefined>(undefined);
+
+export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [payments, setPayments] = useState<MonthlyPayment[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -58,7 +80,8 @@ export function useRealtimeData() {
   useEffect(() => {
     fetchData();
 
-    // Subscribe to live Postgres / Local updates
+    // Fix: Exactly ONE subscription is created and managed here for the whole application.
+    // Attaches all handlers before .subscribe() and cleans up with supabase.removeChannel(channel).
     const unsubscribe = db.subscribeToChanges(() => {
       fetchData();
     });
@@ -122,7 +145,7 @@ export function useRealtimeData() {
     });
   }, [admins]);
 
-  return {
+  const value: RealtimeDataContextType = {
     players,
     payments,
     loans,
@@ -135,4 +158,18 @@ export function useRealtimeData() {
     isPlayerAdmin,
     refetch: fetchData,
   };
+
+  return (
+    <RealtimeDataContext.Provider value={value}>
+      {children}
+    </RealtimeDataContext.Provider>
+  );
+};
+
+export function useRealtimeData(): RealtimeDataContextType {
+  const context = useContext(RealtimeDataContext);
+  if (!context) {
+    throw new Error('useRealtimeData must be used within a RealtimeDataProvider');
+  }
+  return context;
 }

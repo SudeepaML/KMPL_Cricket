@@ -1,22 +1,8 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- * 
- * Admin Login Page with Supabase Email OTP (signInWithOtp + verifyOtp).
- * Features:
- * - Clear notice that players DO NOT need to log in to view tournament data
- * - Real-time Authentication Status Feedback (Success vs Failed)
- * - Officer modal selector listing all registered tournament admins
- * - "Register New Co-Admin / Backup Officer" affordance so other officers can always enter data
- * - Direct triggers to open User Guide and Rules & Regulations
- */
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { db } from '../lib/database';
-import { isSupabaseConfigured } from '../lib/supabase';
 import { Admin } from '../types';
 import { KmplLogo } from '../components/KmplLogo';
 import { UserGuideModal } from '../components/UserGuideModal';
@@ -26,61 +12,124 @@ import {
   Mail,
   KeyRound,
   Loader2,
-  Users,
   ArrowRight,
   CheckCircle2,
-  UserPlus,
-  AlertTriangle,
   XCircle,
-  Eye,
   BookOpen,
   ScrollText,
-  Sparkles,
+  Lock,
+  ShieldCheck,
+  RefreshCw,
+  UserCheck,
+  ChevronDown,
 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
-  const { isAdmin, sendOtp, verifyOtp, pendingEmail, currentAdmin, adminDisplayName, signOut } = useAuth();
+  const {
+    isAdmin,
+    sendOtp,
+    verifyOtp,
+    pendingEmail,
+    setPendingEmail,
+    currentAdmin,
+    adminDisplayName,
+    signOut,
+    isSupabaseConnected,
+  } = useAuth();
   const { t, language } = useLanguage();
   const isKn = language === 'kn';
   const navigate = useNavigate();
 
+  // Admin selection & credentials
+  const [adminsList, setAdminsList] = useState<Admin[]>([]);
+  const [selectedAdminId, setSelectedAdminId] = useState<string>('');
+  const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [email, setEmail] = useState('');
   const [token, setToken] = useState('');
-  const [adminsList, setAdminsList] = useState<Admin[]>([]);
-  const [isOfficerModalOpen, setIsOfficerModalOpen] = useState(false);
-  const [isAddOfficerOpen, setIsAddOfficerOpen] = useState(false);
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [loading, setLoading] = useState(false);
 
   // Authentication Status Feedback State
   const [authStatus, setAuthStatus] = useState<'idle' | 'success' | 'failed'>('idle');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [otpInfo, setOtpInfo] = useState<string | null>(null);
 
-  // New admin state
-  const [newName, setNewName] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newRole, setNewRole] = useState('Co-Officer / Data Entry Admin');
+  // Modals for public guides / rules
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
 
-  const loadAdmins = () => {
-    db.getAdmins().then((data) => {
-      setAdminsList(data);
-    });
-  };
-
+  // Fetch authorized admins list on mount so any newly added admins are immediately available
   useEffect(() => {
-    loadAdmins();
-  }, []);
+    let isMounted = true;
+    const fetchAdmins = async () => {
+      try {
+        const list = await db.getAdmins();
+        if (isMounted) {
+          setAdminsList(list);
+          if (list.length > 0 && !pendingEmail) {
+            // Default to primary developer or first officer in list
+            const initialAdmin = list.find((a) => a.is_developer) || list[0];
+            setSelectedAdminId(initialAdmin.id);
+            setSelectedAdmin(initialAdmin);
+            setEmail(initialAdmin.email);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load registered admins for selector:', err);
+      }
+    };
+
+    fetchAdmins();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pendingEmail]);
 
   useEffect(() => {
     if (pendingEmail) {
       setEmail(pendingEmail);
       setStep('otp');
+      // Match with known admin
+      const match = adminsList.find(
+        (a) => a.email.toLowerCase() === pendingEmail.toLowerCase()
+      );
+      if (match) {
+        setSelectedAdminId(match.id);
+        setSelectedAdmin(match);
+      }
     }
-  }, [pendingEmail]);
+  }, [pendingEmail, adminsList]);
+
+  const handleSelectAdmin = (adminId: string) => {
+    setSelectedAdminId(adminId);
+    if (authStatus !== 'idle') setAuthStatus('idle');
+
+    if (adminId === 'custom') {
+      setSelectedAdmin(null);
+      setEmail('');
+    } else {
+      const match = adminsList.find((a) => a.id === adminId);
+      if (match) {
+        setSelectedAdmin(match);
+        setEmail(match.email);
+      }
+    }
+  };
+
+  const handleEmailChange = (newEmail: string) => {
+    setEmail(newEmail);
+    if (authStatus !== 'idle') setAuthStatus('idle');
+
+    const clean = newEmail.trim().toLowerCase();
+    const match = adminsList.find((a) => a.email.toLowerCase() === clean);
+    if (match) {
+      setSelectedAdmin(match);
+      setSelectedAdminId(match.id);
+    } else if (selectedAdminId !== 'custom') {
+      setSelectedAdminId('custom');
+      setSelectedAdmin(null);
+    }
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,21 +137,10 @@ export const AdminLoginPage: React.FC = () => {
 
     if (!cleanEmail || !cleanEmail.includes('@')) {
       setAuthStatus('failed');
-      setStatusMessage(isKn ? 'ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ.' : 'Please enter a valid registered email address.');
-      return;
-    }
-
-    // Check if entered email exists in authorized admins table
-    const isAuthorized = adminsList.some(
-      (a) => a.email.trim().toLowerCase() === cleanEmail
-    );
-
-    if (!isAuthorized) {
-      setAuthStatus('failed');
       setStatusMessage(
         isKn
-          ? `ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ (Authentication Failed): "${cleanEmail}" ಇಮೇಲ್ ಟೂರ್ನಮೆಂಟ್ ಅಡ್ಮಿನ್ ಪಟ್ಟಿಯಲ್ಲಿಲ್ಲ. ಆಟಗಾರರಿಗೆ ಯಾವುದೇ ಲಾಗಿನ್ ಅಗತ್ಯವಿಲ್ಲ!`
-          : `Authentication Failed: "${cleanEmail}" is not registered in the tournament committee admin list. Only authorized officers can log in.`
+          ? 'ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಅಧಿಕೃತ ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ.'
+          : 'Please select an officer or enter a valid registered email address.'
       );
       return;
     }
@@ -116,15 +154,16 @@ export const AdminLoginPage: React.FC = () => {
 
     if (res.success) {
       setStep('otp');
-      setOtpInfo(
-        isSupabaseConfigured
-          ? `6-digit OTP code sent to ${cleanEmail}. Check your inbox.`
-          : `Demo Mode Active: Enter code '123456' to sign in as ${cleanEmail}.`
-      );
       setAuthStatus('idle');
+      setStatusMessage(null);
     } else {
       setAuthStatus('failed');
-      setStatusMessage(res.error || 'Failed to send OTP code.');
+      setStatusMessage(
+        res.error ||
+          (isKn
+            ? 'ಇಮೇಲ್‌ಗೆ ಒಟಿಪಿ ಕಳುಹಿಸಲು ವಿಫಲವಾಗಿದೆ. ಅಧಿಕೃತ ಇಮೇಲ್ ಮಾತ್ರ ಲಾಗಿನ್ ಆಗಬಹುದು.'
+            : 'Failed to send OTP code. Only registered officer emails can log in.')
+      );
     }
   };
 
@@ -134,7 +173,11 @@ export const AdminLoginPage: React.FC = () => {
 
     if (cleanToken.length !== 6) {
       setAuthStatus('failed');
-      setStatusMessage(isKn ? 'ದಯವಿಟ್ಟು 6-ಅಂಕಿಯ ಒಟಿಪಿ ಕೋಡ್ ನಮೂದಿಸಿ.' : 'Please enter the complete 6-digit OTP code.');
+      setStatusMessage(
+        isKn
+          ? 'ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್‌ನಲ್ಲಿರುವ 6-ಅಂಕಿಯ ಒಟಿಪಿ ಕೋಡ್ ನಮೂದಿಸಿ.'
+          : 'Please enter the complete 6-digit OTP code sent to your email.'
+      );
       return;
     }
 
@@ -149,55 +192,38 @@ export const AdminLoginPage: React.FC = () => {
       setAuthStatus('success');
       setStatusMessage(
         isKn
-          ? 'ದೃಢೀಕರಣ ಯಶಸ್ವಿಯಾಗಿದೆ (Authentication Successful)! ಅಡ್ಮಿನ್ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಕರೆದೊಯ್ಯಲಾಗುತ್ತಿದೆ...'
-          : 'Authentication Successful! Redirecting to Admin Dashboard...'
+          ? 'ದೃಢೀಕರಣ ಯಶಸ್ವಿಯಾಗಿದೆ! ಅಡ್ಮಿನ್ ಪೋರ್ಟಲ್‌ಗೆ ಕರೆದೊಯ್ಯಲಾಗುತ್ತಿದೆ...'
+          : 'Authentication Successful! Opening Admin Portal...'
       );
       setTimeout(() => {
         navigate('/admin');
-      }, 900);
+      }, 600);
     } else {
       setAuthStatus('failed');
       setStatusMessage(
         res.error ||
           (isKn
-            ? 'ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ (Authentication Failed): ತಪ್ಪಾದ ಒಟಿಪಿ ಕೋಡ್ ನಮೂದಿಸಲಾಗಿದೆ.'
-            : 'Authentication Failed: Invalid 6-digit OTP code. Please enter the code sent to your email (or 123456 in demo).')
+            ? 'ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ: ತಪ್ಪಾದ ಒಟಿಪಿ ಕೋಡ್. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಇಮೇಲ್ ಪರಿಶೀಲಿಸಿ.'
+            : 'Authentication Failed: Invalid 6-digit OTP code. Please check your email inbox.')
       );
     }
   };
 
-  const handleSelectAdminQuick = (adm: Admin) => {
-    setEmail(adm.email);
+  const handleResendOtp = async () => {
+    setLoading(true);
     setAuthStatus('idle');
     setStatusMessage(null);
-    setIsOfficerModalOpen(false);
-  };
-
-  const handleRegisterNewOfficer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName.trim() || !newEmail.trim() || !newPhone.trim()) return;
-
-    try {
-      await db.addAdmin({
-        name: newName.trim(),
-        phone: newPhone.trim(),
-        email: newEmail.trim().toLowerCase(),
-        is_developer: false,
-        role_title: newRole,
-      });
-
-      setEmail(newEmail.trim().toLowerCase());
-      setIsAddOfficerOpen(false);
-      setIsOfficerModalOpen(false);
-      setNewName('');
-      setNewPhone('');
-      setNewEmail('');
-      loadAdmins();
-      setAuthStatus('idle');
-      setStatusMessage('Backup officer added successfully. You can now request an OTP.');
-    } catch (err: unknown) {
+    const res = await sendOtp(email.trim().toLowerCase());
+    setLoading(false);
+    if (res.success) {
+      setStatusMessage(
+        isKn
+          ? 'ಹೊಸ ಒಟಿಪಿ ಕೋಡ್ ನಿಮ್ಮ ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ.'
+          : 'A new 6-digit OTP code has been dispatched to your email.'
+      );
+    } else {
       setAuthStatus('failed');
-      setStatusMessage(err instanceof Error ? err.message : 'Failed to register officer.');
+      setStatusMessage(res.error || 'Failed to resend code.');
     }
   };
 
@@ -207,7 +233,7 @@ export const AdminLoginPage: React.FC = () => {
       <div className="mb-6 p-4 rounded-3xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-100 shadow-xs transition-colors">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-xl bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
-            <Eye className="w-5 h-5 text-emerald-800 dark:text-emerald-200" />
+            <ShieldCheck className="w-5 h-5 text-emerald-800 dark:text-emerald-200" />
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-0.5">
@@ -215,20 +241,20 @@ export const AdminLoginPage: React.FC = () => {
                 {isKn ? 'ಆಟಗಾರರ ಗಮನಕ್ಕೆ' : 'Notice for Players'}
               </span>
               <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                {isKn ? 'ಯಾವುದೇ ಲಾಗಿನ್ ಅಗತ್ಯವಿಲ್ಲ!' : 'No Login Required for Players!'}
+                {isKn ? 'ಆಟಗಾರರಿಗೆ ಯಾವುದೇ ಲಾಗಿನ್ ಅಗತ್ಯವಿಲ್ಲ!' : 'No Login Required for Players!'}
               </span>
             </div>
             <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
               {isKn
-                ? 'ಆಟಗಾರರು, ಗ್ರಾಮಸ್ಥರು ಮತ್ತು ವೀಕ್ಷಕರು ಎಲ್ಲಾ ಲೆಕ್ಕಪತ್ರಗಳು, ಆಟಗಾರರ ಪಟ್ಟಿ, ತಿಂಗಳ ಫಂಡ್ ಮತ್ತು ಸಾಲದ ವಿವರಗಳನ್ನು ಮುಕ್ತವಾಗಿ ವೀಕ್ಷಿಸಬಹುದು. ಕೆಳಗಿನ ಬಟನ್ ಒತ್ತಿ ಸಾರ್ವಜನಿಕ ವಿವರ ವೀಕ್ಷಿಸಿ.'
-                : 'Players and village members do not need to log in or remember passwords. All finance records and player profiles are 100% public and open for transparent viewing.'}
+                ? 'ಆಟಗಾರರು, ಗ್ರಾಮಸ್ಥರು ಮತ್ತು ವೀಕ್ಷಕರು ಎಲ್ಲಾ ಲೆಕ್ಕಪತ್ರಗಳು, ಆಟಗಾರರ ಪಟ್ಟಿ, ಮಾಸಿಕ ಫಂಡ್ ಮತ್ತು ಬಡ್ಡಿ ಚಿಟ್ಟಿ ಸಾಲಗಳನ್ನು ಮುಕ್ತವಾಗಿ ವೀಕ್ಷಿಸಬಹುದು. ಅಡ್ಮಿನ್ ಲಾಗಿನ್ ಕೇವಲ ಹಣ ಸಂಗ್ರಹಣೆ ದಾಖಲಿಸುವ ಸಮಿತಿ ಅಧಿಕಾರಿಗಳಿಗೆ ಮಾತ್ರ.'
+                : 'Players and village members do not need to log in! All finance records, player profiles, and loan balances are 100% public for transparent viewing. Only authorized officers sign in via Email OTP to record payments.'}
             </p>
             <div className="mt-2.5 flex items-center gap-2 flex-wrap">
               <Link
                 to="/directory"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold transition-all shadow-xs"
               >
-                <span>{isKn ? 'ಸಾರ್ವಜನಿಕ ಆಟಗಾರರ ಪಟ್ಟಿಗೆ ಹೋಗಿ' : 'Go to Public Directory'}</span>
+                <span>{isKn ? 'ಸಾರ್ವಜನಿಕ ಆಟಗಾರರ ಪಟ್ಟಿ' : 'Go to Public Directory'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <button
@@ -259,18 +285,37 @@ export const AdminLoginPage: React.FC = () => {
           <KmplLogo size="lg" withGlow withFloat className="mb-2" />
           <div className="flex items-center gap-1.5 mt-1">
             <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400 text-emerald-950 flex items-center gap-1">
-              <Shield className="w-3.5 h-3.5" />
+              <Lock className="w-3.5 h-3.5" />
               <span>{isKn ? 'ಅಧಿಕೃತ ಸಮಿತಿಗೆ ಮಾತ್ರ' : 'Admin Portal'}</span>
             </span>
           </div>
           <h1 className="mt-2 text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            {t.login}
+            {isKn ? 'ಅಡ್ಮಿನ್ ಇಮೇಲ್ ಒಟಿಪಿ ಲಾಗಿನ್' : 'Admin Email OTP Login'}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
             {isKn
-              ? 'ಹಣ ಸಂಗ್ರಹಣೆ, ಬಡ್ಡಿ ಚಿಟ್ಟಿ ಸಾಲ ನೀಡಿಕೆ ಮತ್ತು ತಿಂಗಳು ಲಾಕ್ ಮಾಡಲು ಅಧಿಕೃತ ಅಧಿಕಾರಿಗಳು ಮಾತ್ರ ರುಜುವಾತು ನಮೂದಿಸಿ ಲಾಗಿನ್ ಆಗಿ.'
-              : 'Enter authorized officer email & 6-digit credentials to access data entry, loan disbursement, and audit lock controls.'}
+              ? 'ಅಡ್ಮಿನ್ ಹೆಸರು ಮತ್ತು ನೋಂದಾಯಿತ ಇಮೇಲ್ ಆಯ್ಕೆಮಾಡಿ, ಇಮೇಲ್‌ಗೆ ಬರುವ 6-ಅಂಕಿಯ ಒಟಿಪಿ ನಮೂದಿಸಿ ಪೋರ್ಟಲ್‌ಗೆ ಲಾಗಿನ್ ಆಗಿ.'
+              : 'Select your Admin Name and Email, then enter the 6-digit OTP sent to your inbox to log in.'}
           </p>
+
+          {/* DATABASE CONNECTION STATUS: Shows ONLY connected or not (no inner technical information) */}
+          <div className="mt-3.5 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs shadow-2xs">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isSupabaseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+              }`}
+            />
+            <span className="text-slate-600 dark:text-slate-300 font-medium">Database:</span>
+            <span
+              className={`font-bold ${
+                isSupabaseConnected
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {isSupabaseConnected ? 'Connected' : 'Not Connected'}
+            </span>
+          </div>
         </div>
 
         {/* ACTIVE SESSION STATUS (IF ALREADY SIGNED IN) */}
@@ -282,32 +327,33 @@ export const AdminLoginPage: React.FC = () => {
               </div>
               <div className="flex-1">
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-400 text-emerald-950">
-                  Active Admin Session
+                  Active Officer Session
                 </span>
                 <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">
                   {adminDisplayName}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                  {currentAdmin.email}
+                  {currentAdmin.email} • {currentAdmin.phone}
                 </p>
                 <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-1.5">
-                  To prevent unauthorized changes by casual viewers or players, click "Lock & Exit" when done.
+                  An active admin session is open on this device.
                 </p>
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={() => navigate('/admin')}
-                    className="px-3.5 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs"
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
                   >
-                    <span>Go to Dashboard</span>
+                    <span>Open Dashboard</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={signOut}
-                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors"
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    Lock & Sign Out
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>{t.lockAndExit}</span>
                   </button>
                 </div>
               </div>
@@ -322,7 +368,7 @@ export const AdminLoginPage: React.FC = () => {
               <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-extrabold uppercase text-[11px] tracking-wide text-rose-700 dark:text-rose-400 block mb-0.5">
-                  {isKn ? '❌ ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ (Authentication Failed)' : '❌ Authentication Failed'}
+                  {isKn ? '❌ ದೃಢೀಕರಣ ವಿಫಲವಾಗಿದೆ (Access Denied)' : '❌ Access Denied'}
                 </span>
                 <p className="text-xs font-medium leading-relaxed">
                   {statusMessage}
@@ -338,7 +384,7 @@ export const AdminLoginPage: React.FC = () => {
               <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-extrabold uppercase text-[11px] tracking-wide text-emerald-700 dark:text-emerald-400 block mb-0.5">
-                  {isKn ? '✅ ದೃಢೀಕರಣ ಯಶಸ್ವಿಯಾಗಿದೆ (Authentication Successful)' : '✅ Authentication Successful'}
+                  {isKn ? '✅ ದೃಢೀಕರಣ ಯಶಸ್ವಿಯಾಗಿದೆ' : '✅ Authentication Successful'}
                 </span>
                 <p className="text-xs font-semibold leading-relaxed">
                   {statusMessage}
@@ -348,84 +394,126 @@ export const AdminLoginPage: React.FC = () => {
           </div>
         )}
 
-        {/* Officer Quick Picker Button */}
-        <div className="mt-6 space-y-2">
-          <button
-            type="button"
-            onClick={() => setIsOfficerModalOpen(true)}
-            className="w-full py-2.5 px-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100/90 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-bold flex items-center justify-between transition-colors min-h-[44px]"
-          >
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-              <span>{t.selectAdmin} ({adminsList.length} registered)</span>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsAddOfficerOpen(true)}
-            className="w-full py-2 px-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100/90 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-semibold flex items-center justify-between transition-colors min-h-[40px]"
-          >
-            <div className="flex items-center gap-1.5">
-              <UserPlus className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-              <span>Add Co-Officer / Backup Admin</span>
-            </div>
-            <span className="text-[10px] text-amber-700 dark:text-amber-400 font-mono">Anytime</span>
-          </button>
-        </div>
-
-        {/* Step 1: Email Form */}
+        {/* STEP 1: Select Admin Name & Email, then dispatch OTP */}
         {step === 'email' ? (
           <form onSubmit={handleSendOtp} className="mt-5 space-y-4">
+            {/* Admin Name Selection Dropdown (includes all current & future registered admins) */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                Officer Email Address
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>{isKn ? 'ಅಡ್ಮಿನ್ ಹೆಸರು ಆಯ್ಕೆಮಾಡಿ' : '1. Select Admin Name'}</span>
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold normal-case">
+                  {adminsList.length} {isKn ? 'ನೋಂದಾಯಿತ ಅಧಿಕಾರಿಗಳು' : 'Officers Registered'}
+                </span>
+              </label>
+
+              <div className="relative">
+                <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 absolute left-3 top-3.5 pointer-events-none" />
+                <select
+                  value={selectedAdminId}
+                  onChange={(e) => handleSelectAdmin(e.target.value)}
+                  className="w-full pl-9 pr-9 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-semibold cursor-pointer appearance-none"
+                >
+                  <option value="" disabled>
+                    -- {isKn ? 'ಅಡ್ಮಿನ್ ಹೆಸರು ಆಯ್ಕೆಮಾಡಿ' : 'Choose Admin / Officer'} --
+                  </option>
+                  {adminsList.map((adm) => (
+                    <option key={adm.id} value={adm.id}>
+                      {adm.is_developer ? '👑 ' : '🛡️ '}
+                      {adm.name} {adm.role_title ? `(${adm.role_title})` : ''}
+                    </option>
+                  ))}
+                  <option value="custom">
+                    ✏️ {isKn ? 'ಬೇರೆ ನೋಂದಾಯಿತ ಇಮೇಲ್ ನಮೂದಿಸಿ...' : 'Enter another registered email...'}
+                  </option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3.5 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Officer Profile Preview Card if an Admin is selected */}
+            {selectedAdmin && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 flex items-center justify-center font-bold text-base shrink-0">
+                    {selectedAdmin.is_developer ? '👑' : <Shield className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 dark:text-white truncate">
+                      {selectedAdmin.name}
+                    </p>
+                    <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium truncate">
+                      {selectedAdmin.role_title || (selectedAdmin.is_developer ? 'Lead Developer' : 'Tournament Officer')}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase px-2 py-1 rounded-md bg-emerald-700 text-white shrink-0">
+                  Authorized
+                </span>
+              </div>
+            )}
+
+            {/* Email Address Input (linked to selected admin) */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>{isKn ? '2. ಅಧಿಕೃತ ಇಮೇಲ್ ವಿಳಾಸ' : '2. Admin Registered Email'}</span>
+                <span className="text-[10px] text-slate-500 font-normal">
+                  {isKn ? 'ಒಟಿಪಿ ಸ್ವೀಕರಿಸಲು' : 'Receives OTP'}
+                </span>
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (authStatus !== 'idle') setAuthStatus('idle');
-                  }}
-                  placeholder="e.g. sudeepaml63@gmail.com"
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="e.g. mlsudeep63@gmail.com"
                   required
-                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-mono"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800 font-mono font-medium"
                 />
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                Only emails in the authorized committee list will receive credentials and be granted access.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                {isKn
+                  ? 'ಮೇಲಿನ ಅಡ್ಮಿನ್ ಇಮೇಲ್‌ಗೆ 6-ಅಂಕಿಯ ಒಟಿಪಿ ಕೋಡ್ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.'
+                  : 'A secure 6-digit OTP code will be sent to this registered officer email inbox.'}
               </p>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full h-11 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px]"
+              disabled={loading || !email.trim()}
+              className="w-full h-11 rounded-xl bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white font-bold text-sm transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px] cursor-pointer"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Checking Admin Authorization...</span>
+                  <span>{isKn ? 'ಒಟಿಪಿ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ...' : 'Dispatching OTP to Email...'}</span>
                 </>
               ) : (
-                <span>Send 6-Digit OTP</span>
+                <>
+                  <Mail className="w-4 h-4 text-amber-300" />
+                  <span>{isKn ? 'ಇಮೇಲ್‌ಗೆ 6-ಅಂಕಿಯ ಒಟಿಪಿ ಕಳುಹಿಸಿ' : 'Send 6-Digit OTP to Email'}</span>
+                </>
               )}
             </button>
           </form>
         ) : (
-          /* Step 2: 6-Digit OTP Verification Form */
+          /* STEP 2: Enter 6-Digit OTP Received in Email & Login */
           <form onSubmit={handleVerifyOtp} className="mt-5 space-y-4">
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200">
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold">{t.otpSentMessage}</p>
-                  <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5 font-mono">{email}</p>
-                  {otpInfo && <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">{otpInfo}</p>}
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-extrabold text-sm text-slate-900 dark:text-white">
+                    {selectedAdmin ? selectedAdmin.name : 'Authorized Officer'}
+                  </p>
+                  <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-mono mt-0.5 font-semibold">
+                    {email}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1.5">
+                    {isKn
+                      ? 'ನಿಮ್ಮ ಇಮೇಲ್ ಇನ್‌ಬಾಕ್ಸ್ ಅಥವಾ ಸ್ಪ್ಯಾಮ್ ಫೋಲ್ಡರ್‌ಗೆ ಕಳುಹಿಸಲಾದ 6-ಅಂಕಿಯ ಒಟಿಪಿ ಕೋಡ್ ನಮೂದಿಸಿ.'
+                      : 'Please enter the 6-digit verification code received in your email inbox.'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -444,237 +532,71 @@ export const AdminLoginPage: React.FC = () => {
                     setToken(e.target.value.replace(/\D/g, ''));
                     if (authStatus !== 'idle') setAuthStatus('idle');
                   }}
-                  placeholder="6-digit code"
+                  placeholder="------"
                   autoFocus
                   required
-                  className="w-full pl-9 pr-3 py-2.5 text-center text-lg tracking-[0.4em] font-mono font-bold bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800"
+                  className="w-full pl-9 pr-3 py-2.5 text-center text-xl tracking-[0.5em] font-mono font-black bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-800"
                 />
               </div>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                {isKn
+                  ? '6-ಅಂಕಿಯ ಒಟಿಪಿ ನಮೂದಿಸಿ ಲಾಗಿನ್ ಬಟನ್ ಒತ್ತಿ.'
+                  : 'Enter the 6-digit OTP and click Login to enter portal.'}
+              </p>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full h-11 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px]"
+              disabled={loading || token.length !== 6}
+              className="w-full h-11 rounded-xl bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white font-bold text-sm transition-colors shadow-sm flex items-center justify-center gap-2 min-h-[44px] cursor-pointer"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying Code...</span>
+                  <span>{isKn ? 'ಒಟಿಪಿ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...' : 'Verifying OTP...'}</span>
                 </>
               ) : (
-                <span>{t.verifyAndLogin}</span>
+                <>
+                  <ShieldCheck className="w-4 h-4 text-amber-300" />
+                  <span>{isKn ? 'ದೃಢೀಕರಿಸಿ ಮತ್ತು ಪೋರ್ಟಲ್‌ಗೆ ಲಾಗಿನ್ ಆಗಿ' : 'Verify OTP & Login to Portal'}</span>
+                </>
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setStep('email');
-                setToken('');
-                setAuthStatus('idle');
-                setStatusMessage(null);
-              }}
-              className="w-full text-center text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 py-1"
-            >
-              Change Email Address
-            </button>
-          </form>
-        )}
-
-        {/* Quick Officer Demo/Testing List */}
-        <div className="mt-8 pt-5 border-t border-slate-100 dark:border-slate-800">
-          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider block mb-2">
-            Registered Committee Members (Quick Autofill):
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {adminsList.slice(0, 4).map((adm) => (
-              <button
-                key={adm.id}
-                type="button"
-                onClick={() => handleSelectAdminQuick(adm)}
-                className="text-left p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700 transition-colors"
-              >
-                <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {adm.is_developer ? '👑 ' : ''}{adm.name}
-                  </span>
-                  {adm.is_developer && (
-                    <span className="text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-1 rounded">Dev</span>
-                  )}
-                </div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate block">
-                  {adm.email}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Registered Officers Modal */}
-      {isOfficerModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-sm">
-                <Shield className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-                <span>{t.adminOfficerList}</span>
-              </div>
-              <button
-                onClick={() => setIsOfficerModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 min-w-[36px] min-h-[36px] flex items-center justify-center"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              Select an authorized tournament officer or add a backup admin below.
-            </p>
-
-            <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
-              {adminsList.map((admin) => (
-                <button
-                  key={admin.id}
-                  onClick={() => handleSelectAdminQuick(admin)}
-                  className="w-full text-left p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-50 dark:hover:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700 transition-colors flex items-center justify-between group min-h-[50px]"
-                >
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-900 dark:group-hover:text-emerald-300">
-                        {admin.is_developer ? '👑 ' : ''}{admin.name}
-                      </span>
-                      {admin.is_developer && (
-                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-1.5 py-0.2 rounded">
-                          Dev
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-400 font-mono block">
-                      {admin.email}
-                    </span>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 group-hover:underline">
-                    Pick
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
               <button
                 type="button"
                 onClick={() => {
-                  setIsOfficerModalOpen(false);
-                  setIsAddOfficerOpen(true);
+                  setStep('email');
+                  setToken('');
+                  setAuthStatus('idle');
+                  setStatusMessage(null);
+                  setPendingEmail(null);
                 }}
-                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-emerald-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+                className="hover:text-slate-800 dark:hover:text-slate-200 underline py-1 cursor-pointer font-medium"
               >
-                <UserPlus className="w-4 h-4" />
-                <span>+ Register New Backup Admin</span>
+                ← {isKn ? 'ಅಡ್ಮಿನ್ ಬದಲಾಯಿಸಿ' : 'Change Officer / Email'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add New Co-Admin Modal */}
-      {isAddOfficerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-sm">
-                <UserPlus className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Add Backup Co-Admin</span>
-              </div>
               <button
-                onClick={() => setIsAddOfficerOpen(false)}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 min-w-[36px] min-h-[36px] flex items-center justify-center"
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="hover:text-emerald-700 dark:hover:text-emerald-400 font-semibold py-1 flex items-center gap-1 cursor-pointer"
               >
-                ✕
+                <RefreshCw className="w-3 h-3" />
+                <span>{isKn ? 'ಮರುಕಳುಹಿಸಿ' : 'Resend Code'}</span>
               </button>
             </div>
+          </form>
+        )}
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              Add another trusted tournament officer so data entry can happen even when you are unavailable.
-            </p>
-
-            <form onSubmit={handleRegisterNewOfficer} className="mt-4 space-y-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="e.g. Ramesh Kumar"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="e.g. ramesh.kmpl@gmail.com"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={newPhone}
-                  onChange={(e) => setNewPhone(e.target.value)}
-                  placeholder="e.g. 9876543210"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Role Title
-                </label>
-                <input
-                  type="text"
-                  value={newRole}
-                  onChange={(e) => setNewRole(e.target.value)}
-                  placeholder="e.g. Co-Treasurer"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddOfficerOpen(false)}
-                  className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold transition-colors min-h-[44px]"
-                >
-                  Add Officer
-                </button>
-              </div>
-            </form>
-          </div>
+        {/* Security Audit Footer */}
+        <div className="mt-8 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+            🛡️ <strong>KMPL Security Policy</strong>: To ensure 100% financial transparency and prevent unauthorized changes by players, data entry permissions are strictly granted only after Supabase Email OTP verification.
+          </p>
         </div>
-      )}
+      </div>
 
       {/* User Guide Modal */}
       <UserGuideModal
@@ -690,3 +612,4 @@ export const AdminLoginPage: React.FC = () => {
     </div>
   );
 };
+

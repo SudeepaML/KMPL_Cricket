@@ -10,7 +10,7 @@
  * - Navigation to Collect, Close Month, Baddi Chitti, Players, and Officers
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';

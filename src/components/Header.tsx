@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
             {/* Developer Portfolio Button */}
             <button
               onClick={() => setIsDevModalOpen(true)}
-              className="p-1.5 sm:px-2 sm:py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 text-xs font-bold transition-colors border border-amber-300/40 flex items-center gap-1"
+              className="p-1.5 sm:px-2 sm:py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 text-xs font-bold transition-colors border border-amber-300/40 flex items-center gap-1 cursor-pointer"
               title="Developer Sudeepa ML Profile & Portfolio"
             >
               <Code2 className="w-3.5 h-3.5 text-amber-300" />
@@ -189,10 +189,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
               <div className="flex items-center gap-1.5">
                 <Link
                   to="/admin"
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-emerald-950 text-xs font-bold transition-all shadow-sm"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 text-xs font-bold transition-all border border-emerald-700/60"
+                  title="Open Admin Dashboard"
                 >
-                  <Shield className="w-3.5 h-3.5" />
+                  <Shield className="w-3.5 h-3.5 text-amber-400" />
                   <span className="truncate max-w-[120px]">{adminDisplayName}</span>
+                </Link>
+                <Link
+                  to="/admin/login"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold transition-all shadow-sm"
+                  title="Admin Login Screen"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>{t.login}</span>
                 </Link>
                 <button
                   onClick={signOut}

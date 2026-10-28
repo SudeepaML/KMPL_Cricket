@@ -21,7 +21,7 @@ export const BottomNav: React.FC = () => {
     { to: '/fund', label: t.monthlyFund, icon: Calendar },
     { to: '/baddi', label: t.baddiChitti, icon: CircleDollarSign },
     { to: '/report', label: t.cumulativeReport, icon: BarChart3 },
-    { to: isAdmin ? '/admin' : '/admin/login', label: t.adminPanel, icon: isAdmin ? ShieldCheck : Lock },
+    { to: '/admin/login', label: t.login, icon: Lock },
   ];
 
   return (

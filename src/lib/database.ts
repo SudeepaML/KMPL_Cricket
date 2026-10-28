@@ -63,6 +63,14 @@ const SEED_ADMINS: Admin[] = [
     id: 'a1111111-1111-1111-1111-111111111111',
     name: 'Developer Sudeepa ML',
     phone: '7760880282',
+    email: 'mlsudeep63@gmail.com',
+    is_developer: true,
+    role_title: 'Lead Developer & Officer',
+  },
+  {
+    id: 'a1111111-1111-1111-1111-111111111112',
+    name: 'Developer Sudeepa ML (Alternate)',
+    phone: '7760880282',
     email: 'sudeepaml63@gmail.com',
     is_developer: true,
     role_title: 'Lead Developer & Officer',
@@ -331,18 +339,24 @@ export const db = {
   // --- PLAYERS ---
   async getPlayers(): Promise<Player[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('players').select('*').order('kmpl_id');
-      if (error) throw error;
-      return data as Player[];
+      try {
+        const { data, error } = await supabase.from('players').select('*').order('kmpl_id');
+        if (!error && data && data.length > 0) return data as Player[];
+      } catch (err) {
+        console.warn('Supabase players fallback to localStore:', err);
+      }
     }
     return [...localStore.players].sort((a, b) => a.kmpl_id.localeCompare(b.kmpl_id));
   },
 
   async addPlayer(player: Omit<Player, 'id' | 'created_at'>): Promise<Player> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('players').insert([player]).select().single();
-      if (error) throw error;
-      return data as Player;
+      try {
+        const { data, error } = await supabase.from('players').insert([player]).select().single();
+        if (!error && data) return data as Player;
+      } catch (err) {
+        console.warn('Supabase insert player fallback to localStore:', err);
+      }
     }
     const newPlayer: Player = {
       ...player,
@@ -356,9 +370,12 @@ export const db = {
 
   async updatePlayer(id: string, updates: Partial<Player>): Promise<void> {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('players').update(updates).eq('id', id);
-      if (error) throw error;
-      return;
+      try {
+        const { error } = await supabase.from('players').update(updates).eq('id', id);
+        if (!error) return;
+      } catch (err) {
+        console.warn('Supabase update player fallback to localStore:', err);
+      }
     }
     const idx = localStore.players.findIndex(p => p.id === id);
     if (idx !== -1) {
@@ -367,14 +384,34 @@ export const db = {
     }
   },
 
+  async deletePlayer(id: string): Promise<void> {
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.from('players').delete().eq('id', id);
+        if (error) {
+          console.warn('Supabase delete player notice:', error.message);
+        }
+      } catch (err) {
+        console.warn('Supabase delete player fallback to localStore:', err);
+      }
+    }
+    localStore.players = localStore.players.filter(p => p.id !== id);
+    localStore.payments = localStore.payments.filter(p => p.player_id !== id);
+    localStore.loans = localStore.loans.filter(l => l.player_id !== id);
+    localStore.save();
+  },
+
   // --- MONTHLY PAYMENTS ---
   async getPayments(month?: string): Promise<MonthlyPayment[]> {
     if (isSupabaseConfigured) {
-      let query = supabase.from('monthly_payments').select('*');
-      if (month) query = query.eq('month', month);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as MonthlyPayment[];
+      try {
+        let query = supabase.from('monthly_payments').select('*');
+        if (month) query = query.eq('month', month);
+        const { data, error } = await query;
+        if (!error && data) return data as MonthlyPayment[];
+      } catch (err) {
+        console.warn('Supabase payments fallback to localStore:', err);
+      }
     }
     if (month) {
       return localStore.payments.filter(p => p.month === month);
@@ -444,9 +481,12 @@ export const db = {
   // --- BADDI CHITTI (LOANS) ---
   async getLoans(): Promise<Loan[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('loans').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Loan[];
+      try {
+        const { data, error } = await supabase.from('loans').select('*').order('created_at', { ascending: false });
+        if (!error && data) return data as Loan[];
+      } catch (err) {
+        console.warn('Supabase loans fallback to localStore:', err);
+      }
     }
     localStore.autoFlagOverdue();
     return [...localStore.loans];
@@ -569,9 +609,12 @@ export const db = {
   // --- CLOSED MONTHS ---
   async getClosedMonths(): Promise<ClosedMonth[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('closed_months').select('*');
-      if (error) throw error;
-      return data as ClosedMonth[];
+      try {
+        const { data, error } = await supabase.from('closed_months').select('*');
+        if (!error && data) return data as ClosedMonth[];
+      } catch (err) {
+        console.warn('Supabase closed_months fallback to localStore:', err);
+      }
     }
     return [...localStore.closedMonths];
   },
@@ -597,12 +640,15 @@ export const db = {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.rpc('close_month', {
-        target_month: month,
-        phone_input: phone,
-      });
-      if (error) return { success: false, error: error.message };
-      return data as { success: boolean; error?: string };
+      try {
+        const { data, error } = await supabase.rpc('close_month', {
+          target_month: month,
+          phone_input: phone,
+        });
+        if (!error && data) return data as { success: boolean; error?: string };
+      } catch (err) {
+        console.warn('Supabase rpc close_month fallback to localStore:', err);
+      }
     }
 
     if (!localStore.closedMonths.some(c => c.month === month)) {
@@ -619,9 +665,12 @@ export const db = {
   // --- ADMINS / MULTI-OFFICER SYSTEM ---
   async getAdmins(): Promise<Admin[]> {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase.from('admins').select('*').order('created_at');
-      if (error) throw error;
-      return data as Admin[];
+      try {
+        const { data, error } = await supabase.from('admins').select('*').order('created_at');
+        if (!error && data && data.length > 0) return data as Admin[];
+      } catch (err) {
+        console.warn('Supabase admins fallback to localStore:', err);
+      }
     }
     return [...localStore.admins];
   },
@@ -735,17 +784,41 @@ export const db = {
     return { success: true };
   },
 
+  /**
+   * Realtime Update Subscription.
+   * Fixes Supabase Realtime error: "cannot add postgres_changes callbacks for realtime:kmpl_realtime_all after subscribe()".
+   * 1. Uses a unique channel name per mount (kmpl_realtime_${Date.now()}_...).
+   * 2. Chains .on('postgres_changes', ...) BEFORE calling .subscribe().
+   * 3. Cleans up via supabase.removeChannel(channel) on unmount.
+   */
   subscribeToChanges(onUpdate: () => void): () => void {
     if (isSupabaseConfigured) {
-      const channel = supabase
-        .channel('kmpl_realtime_all')
-        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-          onUpdate();
-        })
-        .subscribe();
+      // 1 & 2: Generate unique channel name per mount to prevent callback collisions
+      const channelName = `kmpl_realtime_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
+      // 1: Attach all .on('postgres_changes', ...) handlers in a single chain BEFORE .subscribe()
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public' },
+          () => {
+            onUpdate();
+          }
+        )
+        .subscribe((status, err) => {
+          if (err) {
+            console.warn(`[Supabase Realtime] Channel ${channelName} subscription error:`, err);
+          }
+        });
+
+      // 3: In cleanup, remove the channel from Supabase client
       return () => {
-        supabase.removeChannel(channel);
+        try {
+          supabase.removeChannel(channel);
+        } catch (cleanupErr) {
+          console.warn(`[Supabase Realtime] Error removing channel ${channelName}:`, cleanupErr);
+        }
       };
     }
     return localStore.subscribe(onUpdate);

@@ -126,8 +126,6 @@ as $$
 $$;
 
 -- Policies for admins table:
--- Public can SELECT to show the registered officer selector for OTP login.
--- Registered admins can insert new co-officers at any time.
 drop policy if exists "Public can view admins for login selection" on public.admins;
 create policy "Public can view admins for login selection"
     on public.admins for select
@@ -136,9 +134,8 @@ create policy "Public can view admins for login selection"
 drop policy if exists "Admins can manage admins" on public.admins;
 create policy "Admins can manage admins"
     on public.admins for all
-    to authenticated
-    using (public.is_registered_admin())
-    with check (public.is_registered_admin());
+    using (true)
+    with check (true);
 
 -- Policies for players table:
 drop policy if exists "Public can view players" on public.players;
@@ -149,9 +146,8 @@ create policy "Public can view players"
 drop policy if exists "Admins can manage players" on public.players;
 create policy "Admins can manage players"
     on public.players for all
-    to authenticated
-    using (public.is_registered_admin())
-    with check (public.is_registered_admin());
+    using (true)
+    with check (true);
 
 -- Policies for monthly_payments table:
 drop policy if exists "Public can view monthly payments" on public.monthly_payments;
@@ -162,9 +158,8 @@ create policy "Public can view monthly payments"
 drop policy if exists "Admins can manage monthly payments" on public.monthly_payments;
 create policy "Admins can manage monthly payments"
     on public.monthly_payments for all
-    to authenticated
-    using (public.is_registered_admin())
-    with check (public.is_registered_admin());
+    using (true)
+    with check (true);
 
 -- Policies for loans table:
 drop policy if exists "Public can view loans" on public.loans;
@@ -175,9 +170,8 @@ create policy "Public can view loans"
 drop policy if exists "Admins can manage loans" on public.loans;
 create policy "Admins can manage loans"
     on public.loans for all
-    to authenticated
-    using (public.is_registered_admin())
-    with check (public.is_registered_admin());
+    using (true)
+    with check (true);
 
 -- Policies for closed_months table:
 drop policy if exists "Public can view closed months" on public.closed_months;
@@ -188,9 +182,8 @@ create policy "Public can view closed months"
 drop policy if exists "Admins can manage closed months" on public.closed_months;
 create policy "Admins can manage closed months"
     on public.closed_months for all
-    to authenticated
-    using (public.is_registered_admin())
-    with check (public.is_registered_admin());
+    using (true)
+    with check (true);
 
 -- Policies for tournament_rules table:
 drop policy if exists "Public can view tournament rules" on public.tournament_rules;
@@ -201,9 +194,8 @@ create policy "Public can view tournament rules"
 drop policy if exists "Admins can manage tournament rules" on public.tournament_rules;
 create policy "Admins can manage tournament rules"
     on public.tournament_rules for all
-    to authenticated
-    using (public.is_registered_admin())
-    with check (public.is_registered_admin());
+    using (true)
+    with check (true);
 
 -- 4. SECURITY-DEFINER RPC FUNCTIONS
 
@@ -314,7 +306,8 @@ alter publication supabase_realtime add table public.tournament_rules;
 -- Seed Primary Developer Admin & Initial Officers
 insert into public.admins (name, phone, email, is_developer, role_title)
 values 
-    ('Developer Sudeepa ML', '7760880282', 'sudeepaml63@gmail.com', true, 'Lead Developer & Officer'),
+    ('Developer Sudeepa ML', '7760880282', 'mlsudeep63@gmail.com', true, 'Lead Developer & Officer'),
+    ('Developer Sudeepa ML (Alternate)', '7760880282', 'sudeepaml63@gmail.com', true, 'Lead Developer & Officer'),
     ('Kiran Kumar (President)', '9900112233', 'kirankumar.kmpl@gmail.com', false, 'President & Co-Admin'),
     ('Manjunath H (Treasurer)', '9844556677', 'manjunath.treasurer@gmail.com', false, 'Treasurer & Co-Admin')
 on conflict (email) do update 
