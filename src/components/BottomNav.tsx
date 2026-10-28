@@ -4,7 +4,7 @@
  * Mobile grouped navigation with thumb-friendly portal menus.
  */
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { Users, Calendar, CircleDollarSign, BarChart3, MessageSquare, Shield, Megaphone, ChevronUp, ScrollText } from 'lucide-react';
@@ -13,6 +13,7 @@ export const BottomNav: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState<'community' | 'player' | 'admin' | null>(null);
 
   const groups = [
@@ -74,7 +75,7 @@ export const BottomNav: React.FC = () => {
           const Icon = group.icon;
           const expanded = openMenu === group.id;
           return (
-            <button key={group.id} type="button" onClick={() => setOpenMenu(expanded ? null : group.id)} aria-expanded={expanded} className={`flex flex-col items-center justify-center min-h-[48px] py-1 rounded-xl transition-colors ${group.active || expanded ? 'text-emerald-700 dark:text-amber-400 font-bold' : 'text-slate-500 dark:text-slate-400'}`}>
+            <button key={group.id} type="button" onClick={() => { if (group.id === 'admin') { setOpenMenu(null); navigate('/admin/login'); } else { setOpenMenu(expanded ? null : group.id); } }} aria-expanded={expanded} className={`flex flex-col items-center justify-center min-h-[48px] py-1 rounded-xl transition-colors ${group.active || expanded ? 'text-emerald-700 dark:text-amber-400 font-bold' : 'text-slate-500 dark:text-slate-400'}`}>
               <span className={`p-1 rounded-lg ${group.active || expanded ? 'bg-emerald-100 dark:bg-amber-400/15' : ''}`}>
                 <Icon className="w-5 h-5" />
               </span>
