@@ -13,6 +13,7 @@ import { X, Search } from 'lucide-react';
 interface AlphabeticalDirectoryModalProps {
   isOpen: boolean;
   players: Player[];
+  isPlayerAdmin?: (player: Player) => boolean;
   onSelectPlayer: (player: Player) => void;
   onClose: () => void;
 }
@@ -20,6 +21,7 @@ interface AlphabeticalDirectoryModalProps {
 export const AlphabeticalDirectoryModal: React.FC<AlphabeticalDirectoryModalProps> = ({
   isOpen,
   players,
+  isPlayerAdmin,
   onSelectPlayer,
   onClose,
 }) => {
@@ -125,28 +127,38 @@ export const AlphabeticalDirectoryModal: React.FC<AlphabeticalDirectoryModalProp
                     {letter}
                   </div>
                   <div className="space-y-1">
-                    {grouped.map[letter].map(player => (
-                      <button
-                        key={player.id}
-                        onClick={() => {
-                          onSelectPlayer(player);
-                          onClose();
-                        }}
-                        className="w-full text-left p-2.5 rounded-xl hover:bg-emerald-50 transition-colors flex items-center justify-between group min-h-[44px]"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-xs font-mono font-semibold text-slate-400 group-hover:text-emerald-700">
-                            {player.kmpl_id}
+                    {grouped.map[letter].map(player => {
+                      const isAdmin = isPlayerAdmin ? isPlayerAdmin(player) : false;
+                      return (
+                        <button
+                          key={player.id}
+                          onClick={() => {
+                            onSelectPlayer(player);
+                            onClose();
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl transition-colors flex items-center justify-between group min-h-[44px] ${
+                            isAdmin ? 'bg-amber-50/50 hover:bg-amber-100/70 border border-amber-200/50' : 'hover:bg-emerald-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-xs font-mono font-semibold text-slate-400 group-hover:text-emerald-700 shrink-0">
+                              {player.kmpl_id}
+                            </span>
+                            <span className="text-sm font-semibold text-slate-800 group-hover:text-emerald-900 flex items-center gap-1.5 truncate">
+                              <span>{player.name}</span>
+                              {isAdmin && (
+                                <span className="text-[10px] font-bold text-amber-900 bg-amber-200/90 px-1.5 py-0.2 rounded-full border border-amber-300 inline-flex items-center gap-0.5 shrink-0">
+                                  👑 Admin
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-400 font-mono shrink-0">
+                            {player.type}
                           </span>
-                          <span className="text-sm font-semibold text-slate-800 group-hover:text-emerald-900">
-                            {player.name}
-                          </span>
-                        </div>
-                        <span className="text-xs text-slate-400 font-mono">
-                          {player.type}
-                        </span>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))

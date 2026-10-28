@@ -11,10 +11,10 @@ import React, { useState } from 'react';
 import { useRealtimeData } from '../hooks/useRealtimeData';
 import { useLanguage } from '../context/LanguageContext';
 import { db, DEVELOPER_INFO } from '../lib/database';
-import { Admin } from '../types';
+import { Admin, PlayerType } from '../types';
 import { DeveloperAuthModal } from '../components/DeveloperAuthModal';
 import { DeveloperProfileModal } from '../components/DeveloperProfileModal';
-import { Shield, UserPlus, Trash2, CheckCircle2, AlertCircle, Phone, Mail, Award, Lock, ExternalLink, Globe } from 'lucide-react';
+import { Shield, UserPlus, Trash2, CheckCircle2, AlertCircle, Phone, Mail, Award, Lock, ExternalLink, Globe, Sparkles } from 'lucide-react';
 
 export const AdminManagePage: React.FC = () => {
   const { admins, refetch } = useRealtimeData();
@@ -29,6 +29,7 @@ export const AdminManagePage: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [roleTitle, setRoleTitle] = useState('Tournament Co-Admin');
+  const [playerType, setPlayerType] = useState<PlayerType>('Senior');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleAddOfficer = async (e: React.FormEvent) => {
@@ -42,14 +43,18 @@ export const AdminManagePage: React.FC = () => {
         email: email.trim().toLowerCase(),
         is_developer: false,
         role_title: roleTitle.trim(),
-      });
+      }, playerType);
 
-      setStatusMessage({ type: 'success', text: `Added ${name.trim()} as a tournament officer.` });
+      setStatusMessage({
+        type: 'success',
+        text: `Added ${name.trim()} as tournament officer & player with 👑 Admin Symbol.`,
+      });
       setIsAddModalOpen(false);
       setName('');
       setPhone('');
       setEmail('');
-      setTimeout(() => setStatusMessage(null), 3000);
+      setPlayerType('Senior');
+      setTimeout(() => setStatusMessage(null), 3500);
       refetch();
     } catch (err: unknown) {
       setStatusMessage({
@@ -281,6 +286,28 @@ export const AdminManagePage: React.FC = () => {
                   placeholder="e.g. Co-Treasurer"
                   className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  Player Membership Tier
+                </label>
+                <select
+                  value={playerType}
+                  onChange={(e) => setPlayerType(e.target.value as PlayerType)}
+                  className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="Senior">Senior Member (₹200 / month)</option>
+                  <option value="Junior">Junior Member (₹100 / month)</option>
+                </select>
+              </div>
+
+              {/* Automatic directory sync notice */}
+              <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5">
+                <span className="text-base shrink-0">👑</span>
+                <p className="text-[11px] text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
+                  <strong>Automatic Player Directory Sync:</strong> Officers are tournament players too! This officer will be automatically added to the <strong>Player Directory</strong> with the official <strong>👑 Admin Symbol</strong>.
+                </p>
               </div>
 
               <div className="flex items-center gap-2 pt-2">

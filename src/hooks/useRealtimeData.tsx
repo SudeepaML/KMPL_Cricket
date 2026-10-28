@@ -36,6 +36,7 @@ export interface RealtimeDataContextType {
   error: string | null;
   stats: TournamentFinancialStats;
   isPlayerAdmin: (player: Player) => boolean;
+  getAdminForPlayer: (player: Player) => Admin | undefined;
   refetch: () => Promise<void>;
 }
 
@@ -136,14 +137,25 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   })();
 
-  // Helper to check if a player phone or email matches an admin
-  const isPlayerAdmin = useCallback((player: Player): boolean => {
-    const cleanPlayerPhone = player.phone.replace(/\D/g, '');
-    return admins.some(a => {
-      const cleanAdminPhone = a.phone.replace(/\D/g, '');
-      return cleanAdminPhone.length > 5 && cleanAdminPhone === cleanPlayerPhone;
+  // Helper to find the Admin profile matching a Player (by phone or name)
+  const getAdminForPlayer = useCallback((player: Player): Admin | undefined => {
+    const cleanPlayerPhone = player.phone.replace(/\D/g, '').slice(-10);
+    const pName = player.name.toLowerCase().trim();
+    return admins.find(a => {
+      const cleanAdminPhone = a.phone.replace(/\D/g, '').slice(-10);
+      const phoneMatch = cleanAdminPhone.length >= 8 && cleanAdminPhone === cleanPlayerPhone;
+      const aName = a.name.toLowerCase().trim();
+      const nameMatch = aName === pName ||
+                        aName.startsWith(pName) ||
+                        pName.startsWith(aName);
+      return phoneMatch || nameMatch;
     });
   }, [admins]);
+
+  // Helper to check if a player phone or email matches an admin
+  const isPlayerAdmin = useCallback((player: Player): boolean => {
+    return Boolean(getAdminForPlayer(player));
+  }, [getAdminForPlayer]);
 
   const value: RealtimeDataContextType = {
     players,
@@ -156,6 +168,7 @@ export const RealtimeDataProvider: React.FC<{ children: React.ReactNode }> = ({ 
     error,
     stats,
     isPlayerAdmin,
+    getAdminForPlayer,
     refetch: fetchData,
   };
 

@@ -25,10 +25,10 @@ import { RulesRegulationsModal } from '../components/RulesRegulationsModal';
 import { UserGuideModal } from '../components/UserGuideModal';
 import { KmplLogo } from '../components/KmplLogo';
 import { formatINR } from '../lib/database';
-import { Search, ListFilter, Users, Phone, ChevronRight, Award, Shield, Code2, ExternalLink, ScrollText, BookOpen, Sparkles } from 'lucide-react';
+import { Search, ListFilter, Users, Phone, ChevronRight, Award, Shield, Crown, Code2, ExternalLink, ScrollText, BookOpen, Sparkles } from 'lucide-react';
 
 export const DirectoryPage: React.FC = () => {
-  const { players, admins, loading, isPlayerAdmin } = useRealtimeData();
+  const { players, admins, loading, isPlayerAdmin, getAdminForPlayer } = useRealtimeData();
   const { t } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -169,8 +169,9 @@ export const DirectoryPage: React.FC = () => {
       ) : (
         <div className="space-y-2.5">
           {filteredPlayers.map((player, index) => {
-            const isAdmin = isPlayerAdmin(player);
-            const isDeveloper = player.phone.includes('7760880282') || player.name.toLowerCase().includes('sudeepa');
+            const adminInfo = getAdminForPlayer(player);
+            const isAdmin = Boolean(adminInfo);
+            const isDeveloper = player.phone.includes('7760880282') || player.name.toLowerCase().includes('sudeepa') || adminInfo?.is_developer;
 
             return (
               <button
@@ -178,7 +179,9 @@ export const DirectoryPage: React.FC = () => {
                 onClick={() => handlePlayerClick(player)}
                 className={`w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 group min-h-[64px] ${
                   isDeveloper
-                    ? 'bg-gradient-to-r from-amber-50/60 dark:from-amber-950/30 to-emerald-50/40 dark:to-emerald-950/20 border-amber-300/80 dark:border-amber-700/80 hover:border-amber-400 shadow-xs'
+                    ? 'bg-gradient-to-r from-amber-50/70 dark:from-amber-950/30 to-emerald-50/40 dark:to-emerald-950/20 border-amber-300/90 dark:border-amber-700/80 hover:border-amber-400 shadow-xs'
+                    : isAdmin
+                    ? 'bg-gradient-to-r from-amber-50/40 via-white to-white dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 hover:bg-amber-50/60 dark:hover:bg-slate-800/90 border-amber-200/90 dark:border-amber-800/70 shadow-2xs hover:shadow-xs'
                     : 'bg-white dark:bg-slate-900 hover:bg-emerald-50/60 dark:hover:bg-slate-800/80 border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-xs'
                 }`}
               >
@@ -188,14 +191,19 @@ export const DirectoryPage: React.FC = () => {
                     {index + 1}.
                   </span>
 
-                  <div className={`w-10 h-10 rounded-xl font-bold flex items-center justify-center shrink-0 shadow-2xs ${
+                  <div className={`w-10 h-10 rounded-xl font-bold flex items-center justify-center shrink-0 shadow-2xs relative ${
                     isDeveloper
                       ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-emerald-950 font-black ring-2 ring-amber-300'
                       : isAdmin
-                      ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-emerald-950 font-black'
+                      ? 'bg-gradient-to-tr from-amber-400 via-amber-500 to-emerald-600 text-emerald-950 font-black ring-2 ring-amber-300/90 shadow-xs'
                       : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300'
                   }`}>
-                    {isDeveloper ? '👑' : player.name.charAt(0)}
+                    {isDeveloper ? '👑' : isAdmin ? '👑' : player.name.charAt(0)}
+                    {isAdmin && !isDeveloper && (
+                      <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-900 text-amber-300 rounded-full flex items-center justify-center text-[8px] ring-1 ring-amber-300 font-bold" title="Tournament Officer">
+                        🛡️
+                      </span>
+                    )}
                   </div>
 
                   <div className="min-w-0">
@@ -204,12 +212,15 @@ export const DirectoryPage: React.FC = () => {
                         {player.name}
                       </span>
                       {isDeveloper ? (
-                        <span className="text-xs font-black text-amber-900 dark:text-amber-200 bg-amber-200/90 dark:bg-amber-950/80 px-1.5 py-0.5 rounded-md shrink-0 inline-flex items-center gap-0.5 border border-amber-300 dark:border-amber-700">
-                          👑 Lead Developer
+                        <span className="text-xs font-black text-amber-950 dark:text-amber-100 bg-amber-300/95 dark:bg-amber-900/70 px-2 py-0.5 rounded-full shrink-0 inline-flex items-center gap-1 border border-amber-400 dark:border-amber-600 shadow-2xs">
+                          <Crown className="w-3.5 h-3.5 text-amber-900 dark:text-amber-200 fill-amber-500" />
+                          <span>Lead Developer</span>
                         </span>
                       ) : isAdmin ? (
-                        <span className="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/80 px-1.5 py-0.5 rounded-md shrink-0 inline-flex items-center gap-0.5">
-                          👑 Admin
+                        <span className="text-xs font-bold text-amber-950 dark:text-amber-100 bg-amber-200/90 dark:bg-amber-950/90 px-2 py-0.5 rounded-full shrink-0 inline-flex items-center gap-1 border border-amber-300 dark:border-amber-700 shadow-2xs">
+                          <span className="text-xs">👑</span>
+                          <Shield className="w-3 h-3 text-emerald-800 dark:text-emerald-400" />
+                          <span>{adminInfo?.role_title || 'Admin'}</span>
                         </span>
                       ) : null}
                     </div>
@@ -260,6 +271,7 @@ export const DirectoryPage: React.FC = () => {
       <PlayerProfileModal
         player={selectedPlayer}
         isAdminMember={selectedPlayer ? isPlayerAdmin(selectedPlayer) : false}
+        adminInfo={selectedPlayer ? getAdminForPlayer(selectedPlayer) : undefined}
         onClose={() => setSelectedPlayer(null)}
       />
 
@@ -271,6 +283,7 @@ export const DirectoryPage: React.FC = () => {
       <AlphabeticalDirectoryModal
         isOpen={isAlphabeticalOpen}
         players={players}
+        isPlayerAdmin={isPlayerAdmin}
         onSelectPlayer={(p) => handlePlayerClick(p)}
         onClose={() => setIsAlphabeticalOpen(false)}
       />

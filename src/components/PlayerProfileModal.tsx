@@ -8,27 +8,29 @@
  */
 
 import React from 'react';
-import { Player } from '../types';
+import { Player, Admin } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { formatINR, DEVELOPER_INFO } from '../lib/database';
-import { X, Phone, Calendar, Award, CheckCircle2, AlertCircle, ExternalLink, Globe, Code2 } from 'lucide-react';
+import { X, Phone, Calendar, Award, CheckCircle2, AlertCircle, ExternalLink, Globe, Code2, Shield } from 'lucide-react';
 
 interface PlayerProfileModalProps {
   player: Player | null;
   isAdminMember: boolean;
+  adminInfo?: Admin;
   onClose: () => void;
 }
 
 export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
   player,
   isAdminMember,
+  adminInfo,
   onClose,
 }) => {
   const { t } = useLanguage();
 
   if (!player) return null;
 
-  const isDeveloper = player.name.toLowerCase().includes('sudeepa') || player.phone.includes('7760880282');
+  const isDeveloper = player.name.toLowerCase().includes('sudeepa') || player.phone.includes('7760880282') || adminInfo?.is_developer;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
@@ -43,8 +45,10 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
                 👑 Lead Developer & Admin
               </span>
             ) : isAdminMember ? (
-              <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-200/60">
-                👑 Admin Officer
+              <span className="text-xs font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-amber-300 shadow-2xs">
+                <span>👑</span>
+                <Shield className="w-3 h-3 text-emerald-800" />
+                <span>{adminInfo?.role_title || 'Admin Officer'}</span>
               </span>
             ) : null}
           </div>
@@ -58,12 +62,19 @@ export const PlayerProfileModal: React.FC<PlayerProfileModalProps> = ({
 
         {/* Member Avatar & Name */}
         <div className="mt-4 text-center">
-          <div className={`w-16 h-16 mx-auto rounded-2xl font-black text-2xl flex items-center justify-center shadow-md ${
+          <div className={`w-16 h-16 mx-auto rounded-2xl font-black text-2xl flex items-center justify-center shadow-md relative ${
             isDeveloper
               ? 'bg-gradient-to-tr from-amber-400 to-amber-600 text-emerald-950 ring-4 ring-amber-100'
+              : isAdminMember
+              ? 'bg-gradient-to-tr from-amber-400 via-amber-500 to-emerald-600 text-emerald-950 ring-4 ring-amber-100'
               : 'bg-gradient-to-br from-emerald-600 to-teal-800 text-white'
           }`}>
-            {isDeveloper ? '👑' : player.name.charAt(0)}
+            {isDeveloper ? '👑' : isAdminMember ? '👑' : player.name.charAt(0)}
+            {isAdminMember && !isDeveloper && (
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-900 text-amber-300 rounded-full flex items-center justify-center text-[10px] ring-2 ring-white font-bold" title="Tournament Officer">
+                🛡️
+              </span>
+            )}
           </div>
           <h3 className="mt-3 text-lg font-bold text-slate-900 tracking-tight">
             {isAdminMember && '👑 '}

@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 
 export const AdminPlayersPage: React.FC = () => {
-  const { players, refetch } = useRealtimeData();
+  const { players, isPlayerAdmin, refetch } = useRealtimeData();
   const { t, language } = useLanguage();
   const isKn = language === 'kn';
 
@@ -254,9 +254,16 @@ export const AdminPlayersPage: React.FC = () => {
                   {player.kmpl_id}
                 </span>
                 <div className="min-w-0">
-                  <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate block">
-                    {player.name}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate block">
+                      {player.name}
+                    </span>
+                    {isPlayerAdmin(player) && (
+                      <span className="text-[10px] font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-800 px-1.5 py-0.2 rounded-md inline-flex items-center gap-0.5 shrink-0">
+                        👑 Admin
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                     {player.phone} · <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{player.type}</strong> ({formatINR(player.monthly_amount)}/mo)
                   </span>

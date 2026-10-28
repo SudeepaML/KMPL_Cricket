@@ -9,7 +9,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase';
-import { Player, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule } from '../types';
+import { Player, PlayerType, MonthlyPayment, Loan, Admin, ClosedMonth, FundRule } from '../types';
 
 // The 13 official months for the KMPL 2026-2027 tournament cycle
 export const TOURNAMENT_MONTHS: string[] = [
@@ -283,7 +283,52 @@ class LocalStore {
     this.admins = this.load('kmpl_admins', SEED_ADMINS);
     this.closedMonths = this.load('kmpl_closed_months', SEED_CLOSED_MONTHS);
     this.rules = this.load('kmpl_rules', SEED_RULES);
+    this.ensureAdminsInPlayers();
     this.autoFlagOverdue();
+  }
+
+  ensureAdminsInPlayers() {
+    let changed = false;
+    let maxNum = 0;
+    this.players.forEach((p) => {
+      const match = p.kmpl_id.match(/KMPL(\d+)/i);
+      if (match && match[1]) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    });
+
+    this.admins.forEach((admin) => {
+      const cleanAdminPhone = admin.phone.replace(/\D/g, '').slice(-10);
+      const aName = admin.name.toLowerCase().trim();
+      const existing = this.players.find((p) => {
+        const cleanPlayerPhone = p.phone.replace(/\D/g, '').slice(-10);
+        const phoneMatch = cleanPlayerPhone.length >= 8 && cleanPlayerPhone === cleanAdminPhone;
+        const pName = p.name.toLowerCase().trim();
+        const nameMatch = pName === aName || aName.startsWith(pName) || pName.startsWith(aName);
+        return phoneMatch || nameMatch;
+      });
+
+      if (!existing) {
+        maxNum += 1;
+        const newPlayer: Player = {
+          id: 'p_admin_' + admin.id,
+          kmpl_id: `KMPL${String(maxNum).padStart(2, '0')}`,
+          name: admin.name,
+          phone: admin.phone,
+          type: 'Senior',
+          monthly_amount: 200,
+          join_date: '2026-04-01',
+          chitti_taken: false,
+        };
+        this.players.push(newPlayer);
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      this.save();
+    }
   }
 
   load<T>(key: string, defaultVal: T): T {
@@ -675,20 +720,62 @@ export const db = {
     return [...localStore.admins];
   },
 
-  async addAdmin(admin: Omit<Admin, 'id' | 'created_at'>): Promise<Admin> {
+  async addAdmin(admin: Omit<Admin, 'id' | 'created_at'>, playerType: PlayerType = 'Senior'): Promise<Admin> {
+    let createdAdmin: Admin;
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.from('admins').insert([admin]).select().single();
       if (error) throw error;
-      return data as Admin;
+      createdAdmin = data as Admin;
+    } else {
+      createdAdmin = {
+        ...admin,
+        id: 'a_' + Math.random().toString(36).substring(2, 9),
+        created_at: new Date().toISOString(),
+      };
+      localStore.admins.push(createdAdmin);
+      localStore.save();
     }
-    const newAdmin: Admin = {
-      ...admin,
-      id: 'a_' + Math.random().toString(36).substring(2, 9),
-      created_at: new Date().toISOString(),
-    };
-    localStore.admins.push(newAdmin);
-    localStore.save();
-    return newAdmin;
+
+    // Every administrator is also an active player in the tournament.
+    // Automatically ensure this new officer appears in the player directory with the Admin symbol!
+    try {
+      const currentPlayers = await this.getPlayers();
+      const cleanAdminPhone = admin.phone.replace(/\D/g, '').slice(-10);
+      const aName = admin.name.toLowerCase().trim();
+
+      const existingPlayer = currentPlayers.find((p) => {
+        const cleanPlayerPhone = p.phone.replace(/\D/g, '').slice(-10);
+        const phoneMatch = cleanPlayerPhone.length >= 8 && cleanPlayerPhone === cleanAdminPhone;
+        const pName = p.name.toLowerCase().trim();
+        const nameMatch = pName === aName || aName.startsWith(pName) || pName.startsWith(aName);
+        return phoneMatch || nameMatch;
+      });
+
+      if (!existingPlayer) {
+        let maxNum = 0;
+        currentPlayers.forEach((p) => {
+          const match = p.kmpl_id.match(/KMPL(\d+)/i);
+          if (match && match[1]) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        });
+        const nextKmplId = `KMPL${String(maxNum + 1).padStart(2, '0')}`;
+        await this.addPlayer({
+          kmpl_id: nextKmplId,
+          name: admin.name,
+          phone: admin.phone,
+          type: playerType,
+          monthly_amount: playerType === 'Junior' ? 100 : 200,
+          join_date: '2026-04-01',
+          chitti_taken: false,
+        });
+      }
+    } catch (syncErr) {
+      console.warn('Auto-sync admin to players directory error:', syncErr);
+    }
+
+    return createdAdmin;
   },
 
   async deleteAdminWithDeveloperAuth(adminId: string, phone: string): Promise<{ success: boolean; error?: string }> {
