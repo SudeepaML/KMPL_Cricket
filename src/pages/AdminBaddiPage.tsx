@@ -14,7 +14,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db, getErrorMessage, TOURNAMENT_MONTHS, formatINR, isFutureMonth, getMonthDeadlineDate } from '../lib/database';
 import { Loan, Player } from '../types';
-import { CircleDollarSign, Plus, CheckCircle2, Clock, AlertTriangle, CreditCard, Loader2, Lock, Shield, AlertCircle } from 'lucide-react';
+import { CircleDollarSign, Plus, CheckCircle2, Clock, AlertTriangle, CreditCard, Loader2, Lock, Shield, AlertCircle, Trash2 } from 'lucide-react';
 
 export const AdminBaddiPage: React.FC = () => {
   const { currentAdmin } = useAuth();
@@ -27,6 +27,7 @@ export const AdminBaddiPage: React.FC = () => {
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [principalAmount, setPrincipalAmount] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingLoanId, setDeletingLoanId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [repayLoanTarget, setRepayLoanTarget] = useState<Loan | null>(null);
@@ -98,6 +99,22 @@ export const AdminBaddiPage: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteLoan = async (loan: Loan) => {
+    if (!window.confirm(`Delete the loan issued to ${loan.player_name} for ${loan.lending_month}? This cannot be undone.`)) return;
+
+    setDeletingLoanId(loan.id);
+    setStatusMessage(null);
+    try {
+      await db.deleteLoan(loan.id);
+      setStatusMessage({ type: 'success', text: `Loan record for ${loan.player_name} was deleted.` });
+      await refetch();
+    } catch (err: unknown) {
+      setStatusMessage({ type: 'error', text: getErrorMessage(err, 'Failed to delete loan.') });
+    } finally {
+      setDeletingLoanId(null);
     }
   };
 
@@ -339,6 +356,48 @@ export const AdminBaddiPage: React.FC = () => {
             </button>
           </form>
         </div>
+      )}
+
+      {/* Issued loans for the selected month */}
+      {!isUpcoming && (
+        <section className="mt-6 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xs space-y-4">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              Loans Issued · {selectedMonth}
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+              Review issued loans. Records in a closed month cannot be deleted.
+            </p>
+          </div>
+          {loans.filter((loan) => loan.lending_month === selectedMonth).length === 0 ? (
+            <p className="text-xs text-slate-500 py-6 text-center">No loans issued for {selectedMonth}.</p>
+          ) : (
+            <div className="space-y-3">
+              {loans.filter((loan) => loan.lending_month === selectedMonth).map((loan) => (
+                <div key={loan.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white">{loan.player_name}</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                      Principal: {formatINR(loan.principal)} · Interest: {formatINR(loan.interest)} · Total: {formatINR(loan.total_return)}
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                      {loan.status} · Due: {loan.due_date}{loan.recorded_by ? ` · Officer: ${loan.recorded_by}` : ''}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteLoan(loan)}
+                    disabled={deletingLoanId !== null}
+                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/50 disabled:opacity-50"
+                  >
+                    {deletingLoanId === loan.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    {deletingLoanId === loan.id ? 'Deleting…' : 'Delete Loan'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {/* Tab 2: Repay Loan List */}
