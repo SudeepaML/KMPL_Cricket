@@ -331,11 +331,11 @@ export const db = {
   },
 
   async addPlayer(player: Omit<Player, 'id' | 'created_at'>): Promise<Player> {
+    // Player phone numbers are intentionally not stored for privacy.
+    // Keep this payload aligned with the deployed Supabase players table.
     const payload = {
       kmpl_id: player.kmpl_id,
       name: player.name,
-      // phone is NOT NULL in the schema, so never omit it
-      phone: player.phone && player.phone.trim().length > 0 ? player.phone.trim() : '-',
       type: player.type,
       monthly_amount: player.monthly_amount,
       join_date: player.join_date || new Date().toISOString().split('T')[0],
@@ -354,9 +354,8 @@ export const db = {
 
   async updatePlayer(id: string, updates: Partial<Player>): Promise<void> {
     const payload: Record<string, unknown> = { ...updates };
-    if (!payload.phone) {
-      delete payload.phone;
-    }
+    // Phone numbers are intentionally excluded from the players table.
+    delete payload.phone;
 
     if (isSupabaseConfigured) {
       try {
