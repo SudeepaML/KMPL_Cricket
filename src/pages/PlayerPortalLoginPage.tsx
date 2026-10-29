@@ -95,13 +95,13 @@ export const PlayerPortalLoginPage: React.FC = () => {
           )}
           <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Password
             <div className="relative mt-1.5">
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete={isFirstLogin ? 'new-password' : 'current-password'} minLength={8} maxLength={72} required className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 pr-12 text-sm" placeholder="At least 4 characters" />
+              <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete={isFirstLogin ? 'new-password' : 'current-password'} minLength={4} maxLength={72} required className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 pr-12 text-sm" placeholder="At least 4 characters" />
               <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-3 text-slate-400" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
             </div>
           </label>
           {selectedPlayer && isFirstLogin && (
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Confirm password
-              <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={72} required className="mt-1.5 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-sm" placeholder="Enter the same password again" />
+              <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={4} maxLength={72} required className="mt-1.5 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-sm" placeholder="Enter the same password again" />
             </label>
           )}
           {error && <p role="alert" className="rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 p-3 text-sm text-rose-700 dark:text-rose-300">{error}</p>}
