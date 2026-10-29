@@ -2,7 +2,7 @@
 -- Run in Supabase SQL Editor. Guest sessions are pseudonymous; no IP address is collected.
 
 ALTER TABLE public.chat_messages
-  ADD COLUMN IF NOT EXISTS sender_type text NOT NULL DEFAULT 'guest',
+  ADD COLUMN IF NOT EXISTS sender_type text NOT NULL DEFAULT 'unknown',
   ADD COLUMN IF NOT EXISTS sender_id text,
   ADD COLUMN IF NOT EXISTS session_id text;
 
@@ -10,7 +10,7 @@ ALTER TABLE public.chat_messages
   DROP CONSTRAINT IF EXISTS chat_messages_sender_type_check;
 ALTER TABLE public.chat_messages
   ADD CONSTRAINT chat_messages_sender_type_check
-  CHECK (sender_type IN ('admin', 'player_profile', 'guest'));
+  CHECK (sender_type IN ('admin', 'player_profile', 'guest', 'unknown'));
 
 CREATE TABLE IF NOT EXISTS public.activity_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
