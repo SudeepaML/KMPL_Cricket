@@ -36,6 +36,7 @@ import {
   ExternalLink,
   ScrollText,
   Database,
+  Activity,
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -335,6 +336,27 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
             <span className="text-xs font-semibold text-teal-700 dark:text-teal-400 mt-3 block">
               Configure fund policies →
+            </span>
+          </Link>
+
+          {/* Website Activity & Chat Audit */}
+          <Link
+            to="/admin/activity"
+            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-cyan-500 dark:hover:border-cyan-400 hover:shadow-md transition-all group flex flex-col justify-between min-h-[140px]"
+          >
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Activity className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-cyan-900 dark:group-hover:text-cyan-400">
+                Website Activity & Chat Audit
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Review recent visits, active browser sessions, and who posted chat messages.
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-400 mt-3 block">
+              View activity history →
             </span>
           </Link>
 
