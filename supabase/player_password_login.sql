@@ -81,7 +81,6 @@ begin
       'id', player_row.id,
       'kmpl_id', player_row.kmpl_id,
       'name', player_row.name,
-      'phone', player_row.phone,
       'type', player_row.type,
       'monthly_amount', player_row.monthly_amount,
       'join_date', player_row.join_date,
