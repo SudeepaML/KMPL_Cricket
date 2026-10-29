@@ -36,8 +36,8 @@ security definer
 set search_path = public, extensions
 as $$
 begin
-  if p_password is null or length(p_password) < 8 or length(p_password) > 72 then
-    return jsonb_build_object('success', false, 'error', 'Password must be 8–72 characters.');
+  if p_password is null or length(p_password) < 4 or length(p_password) > 72 then
+    return jsonb_build_object('success', false, 'error', 'Password must be 4–72 characters.');
   end if;
   if not exists (select 1 from public.players where id = p_player_id) then
     return jsonb_build_object('success', false, 'error', 'Player not found.');
