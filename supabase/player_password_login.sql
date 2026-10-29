@@ -36,14 +36,14 @@ security definer
 set search_path = public, extensions
 as $$
 begin
-  if p_password is null or length(p_password) < 4 or length(p_password) > 72 then
+  if p_password is null or char_length(p_password) < 4 or char_char_length(p_password) > 72 then
     return jsonb_build_object('success', false, 'error', 'Password must be 4–72 characters.');
   end if;
   if not exists (select 1 from public.players where id = p_player_id) then
     return jsonb_build_object('success', false, 'error', 'Player not found.');
   end if;
   insert into public.player_credentials(player_id, password_hash)
-  values (p_player_id, crypt(p_password, gen_salt('bf')))
+  values (p_player_id, extensions.crypt(p_password, extensions.gen_salt('bf')))
   on conflict (player_id) do nothing;
   if not found then
     return jsonb_build_object('success', false, 'error', 'Password already set. Please log in.');
