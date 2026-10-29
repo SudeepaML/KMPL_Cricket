@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRealtimeData } from '../hooks/useRealtimeData';
 import { db, localStore } from '../lib/database';
+import { getActivitySessionId, recordActivity } from '../lib/activity';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ChatMessage, Player } from '../types';
 import { KmplLogo } from '../components/KmplLogo';
@@ -114,17 +115,25 @@ export const CommunityChatPage: React.FC = () => {
         name: currentAdmin.name,
         kmpl_id: getAdminKmplId(),
         is_admin: true,
+        sender_type: 'admin' as const,
+        sender_id: currentAdmin.id,
       }
     : currentPlayer
     ? {
         name: currentPlayer.name,
         kmpl_id: currentPlayer.kmpl_id,
         is_admin: false,
+        // Selecting a roster profile is not proof of identity. Keep it distinct
+        // from a verified admin until player verification is implemented.
+        sender_type: 'player_profile' as const,
+        sender_id: currentPlayer.id,
       }
     : {
-        name: 'Community Member',
-        kmpl_id: 'COMMUNITY',
+        name: 'Guest',
+        kmpl_id: 'GUEST',
         is_admin: false,
+        sender_type: 'guest' as const,
+        sender_id: null,
       };
 
   /**
@@ -254,6 +263,16 @@ export const CommunityChatPage: React.FC = () => {
         sender_kmpl_id: activeSender.kmpl_id,
         is_admin: activeSender.is_admin,
         message: trimmed,
+        sender_type: activeSender.sender_type,
+        sender_id: activeSender.sender_id,
+        session_id: getActivitySessionId(),
+      });
+
+      void recordActivity({
+        eventType: 'chat_message',
+        path: '/chat',
+        actor: { type: activeSender.sender_type, id: activeSender.sender_id, name: activeSender.name },
+        details: { sender_kmpl_id: activeSender.kmpl_id },
       });
 
       setInputText('');
