@@ -68,7 +68,10 @@ export const PlayerPortalLoginPage: React.FC = () => {
       loginAsPlayer(player);
       navigate('/directory', { replace: true });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unable to sign in. Please try again.');
+      const err = e as { message?: string; details?: string; hint?: string; code?: string };
+      const message = [err?.message, err?.details, err?.hint].filter(Boolean).join(' ');
+      setError(message || 'Unable to sign in. Please try again.');
+      console.error('Player portal password error:', err?.code, err?.message, err?.details, err?.hint);
     } finally {
       setBusy(false);
     }
