@@ -43,7 +43,7 @@ begin
     return jsonb_build_object('success', false, 'error', 'Player not found.');
   end if;
   insert into public.player_credentials(player_id, password_hash)
-  values (p_player_id, extensions.crypt(p_password, extensions.gen_salt('bf')))
+  values (p_player_id, crypt(p_password, gen_salt('bf')))
   on conflict (player_id) do nothing;
   if not found then
     return jsonb_build_object('success', false, 'error', 'Password already set. Please log in.');
