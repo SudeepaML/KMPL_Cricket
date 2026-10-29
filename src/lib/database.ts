@@ -871,6 +871,9 @@ export const db = {
       sender_kmpl_id: msg.sender_kmpl_id.trim(),
       is_admin: Boolean(msg.is_admin),
       message: msg.message.trim(),
+      sender_type: msg.sender_type || 'guest',
+      sender_id: msg.sender_id || null,
+      session_id: msg.session_id || null,
     };
 
     if (isSupabaseConfigured) {
@@ -892,6 +895,9 @@ export const db = {
       ...payload,
       id: 'chat_' + Math.random().toString(36).substring(2, 9),
       created_at: new Date().toISOString(),
+      sender_type: payload.sender_type,
+      sender_id: payload.sender_id,
+      session_id: payload.session_id,
     };
     localStore.chatMessages.push(newMsg);
     if (localStore.chatMessages.length > 200) {
