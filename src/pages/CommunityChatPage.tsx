@@ -550,6 +550,8 @@ export const CommunityChatPage: React.FC = () => {
                   {activeSender.name} ({activeSender.kmpl_id})
                 </strong>
                 {activeSender.is_admin && ' 👑'}
+                {activeSender.sender_type === 'guest' && <span className="ml-1 text-amber-600">· Guest</span>}
+                {activeSender.sender_type === 'player_profile' && <span className="ml-1 text-amber-600">· Profile not verified</span>}
               </span>
               <span
                 className={`font-mono text-[10px] ${
