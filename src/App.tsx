@@ -36,6 +36,7 @@ import { AdminRulesPage } from './pages/AdminRulesPage';
 import { CommunityChatPage } from './pages/CommunityChatPage';
 import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { AdminActivityPage } from './pages/AdminActivityPage';
+import { PlayerPortalLoginPage } from './pages/PlayerPortalLoginPage';
 
 const WebsiteActivityTracker: React.FC = () => {
   const location = useLocation();
@@ -95,6 +96,7 @@ export default function App() {
 
                       {/* Player Portal Screens */}
                       <Route path="/chat" element={<CommunityChatPage />} />
+                      <Route path="/player/login" element={<PlayerPortalLoginPage />} />
                       <Route path="/announcements" element={<AnnouncementsPage />} />
                       <Route path="/directory" element={<DirectoryPage />} />
                       <Route path="/fund" element={<MonthlyFundPage />} />
