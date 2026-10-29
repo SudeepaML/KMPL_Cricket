@@ -94,6 +94,9 @@ export interface ChatMessage {
   is_admin: boolean;
   message: string;
   created_at: string;
+  sender_type?: 'admin' | 'player_profile' | 'guest';
+  sender_id?: string | null;
+  session_id?: string | null;
 }
 
 export interface Announcement {
