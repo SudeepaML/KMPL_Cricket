@@ -67,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenDbSettings }) => {
               <button type="button" className="px-3 py-2 rounded-lg hover:bg-emerald-800/80 dark:hover:bg-slate-800 font-bold">Player Portal ▾</button>
               <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full pt-2 w-56 z-50">
                 <div className="p-2 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-xl">
+                  <Link to="/player/login" className="block p-3 rounded-lg font-bold text-emerald-800 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-slate-800">Player Login</Link>
                   <Link to="/directory" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.directory}</Link>
                   <Link to="/fund" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.monthlyFund}</Link>
                   <Link to="/baddi" className="block p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">{t.baddiChitti}</Link>
