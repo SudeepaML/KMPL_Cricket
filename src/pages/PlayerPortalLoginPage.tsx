@@ -54,7 +54,7 @@ export const PlayerPortalLoginPage: React.FC = () => {
     setError('');
     if (!selectedPlayer) return setError('Please select your player name.');
     if (!isSupabaseConfigured) return setError('Player password login requires the connected Supabase database.');
-    if (password.length < 8 || password.length > 72) return setError('Use a password between 8 and 72 characters.');
+    if (password.length < 4 || password.length > 72) return setError('Use a password between 4 and 72 characters.');
     if (isFirstLogin && password !== confirmPassword) return setError('Passwords do not match.');
     setBusy(true);
     try {
@@ -95,7 +95,7 @@ export const PlayerPortalLoginPage: React.FC = () => {
           )}
           <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Password
             <div className="relative mt-1.5">
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete={isFirstLogin ? 'new-password' : 'current-password'} minLength={8} maxLength={72} required className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 pr-12 text-sm" placeholder="At least 8 characters" />
+              <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete={isFirstLogin ? 'new-password' : 'current-password'} minLength={8} maxLength={72} required className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 pr-12 text-sm" placeholder="At least 4 characters" />
               <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-3 text-slate-400" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
             </div>
           </label>
