@@ -20,7 +20,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useRealtimeData } from '../hooks/useRealtimeData';
@@ -46,7 +46,8 @@ import {
 } from 'lucide-react';
 
 export const CommunityChatPage: React.FC = () => {
-  const { currentAdmin, isAdmin, currentPlayer, loginAsPlayer, logoutPlayer } = useAuth();
+  const { currentAdmin, isAdmin, currentPlayer, logoutPlayer } = useAuth();
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const isKn = language === 'kn';
   const { players, getAdminForPlayer } = useRealtimeData();
@@ -620,8 +621,8 @@ export const CommunityChatPage: React.FC = () => {
                       key={player.id}
                       type="button"
                       onClick={() => {
-                        loginAsPlayer(player);
                         setIsPlayerModalOpen(false);
+                        navigate('/player/login', { state: { playerId: player.id } });
                       }}
                       className="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-slate-800 transition-colors flex items-center justify-between group min-h-[44px] cursor-pointer"
                     >
