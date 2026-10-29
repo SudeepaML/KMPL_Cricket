@@ -8,7 +8,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -37,6 +37,12 @@ import { CommunityChatPage } from './pages/CommunityChatPage';
 import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { AdminActivityPage } from './pages/AdminActivityPage';
 import { PlayerPortalLoginPage } from './pages/PlayerPortalLoginPage';
+
+const PlayerPortalGuard: React.FC = () => {
+  const { currentAdmin, currentPlayer, loading } = useAuth();
+  if (loading) return <div className="p-8 text-center text-sm text-slate-500">Loading portal…</div>;
+  return currentAdmin || currentPlayer ? <Outlet /> : <Navigate to="/player/login" replace />;
+};
 
 const WebsiteActivityTracker: React.FC = () => {
   const location = useLocation();
@@ -98,11 +104,13 @@ export default function App() {
                       <Route path="/chat" element={<CommunityChatPage />} />
                       <Route path="/player/login" element={<PlayerPortalLoginPage />} />
                       <Route path="/announcements" element={<AnnouncementsPage />} />
-                      <Route path="/directory" element={<DirectoryPage />} />
-                      <Route path="/fund" element={<MonthlyFundPage />} />
-                      <Route path="/fund/:month" element={<MonthlyFundPage />} />
-                      <Route path="/baddi" element={<BaddiChittiPage />} />
-                      <Route path="/report" element={<CumulativeReportPage />} />
+                      <Route element={<PlayerPortalGuard />}>
+                        <Route path="/directory" element={<DirectoryPage />} />
+                        <Route path="/fund" element={<MonthlyFundPage />} />
+                        <Route path="/fund/:month" element={<MonthlyFundPage />} />
+                        <Route path="/baddi" element={<BaddiChittiPage />} />
+                        <Route path="/report" element={<CumulativeReportPage />} />
+                      </Route>
 
                       {/* Admin Authentication */}
                       <Route path="/admin/login" element={<AdminLoginPage />} />
