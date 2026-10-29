@@ -19,7 +19,7 @@ type ChatRow = {
   id: string;
   sender_name: string;
   sender_kmpl_id: string;
-  sender_type?: 'admin' | 'player_profile' | 'guest';
+  sender_type?: 'admin' | 'player_profile' | 'guest' | 'unknown';
   sender_id?: string | null;
   session_id?: string | null;
   message: string;
@@ -95,6 +95,7 @@ export const AdminActivityPage: React.FC = () => {
   const identityLabel = (type?: string) => {
     if (type === 'admin') return 'Admin account';
     if (type === 'player_profile') return 'Player profile · not verified';
+    if (type === 'unknown') return 'Legacy message · identity unknown';
     return 'Guest / anonymous';
   };
 
