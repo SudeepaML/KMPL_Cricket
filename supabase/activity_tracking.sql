@@ -41,6 +41,13 @@ CREATE POLICY "Activity events can be submitted by site visitors"
     AND length(actor_name) <= 120
     AND event_type IN ('page_view', 'heartbeat', 'chat_message')
     AND actor_type IN ('admin', 'player_profile', 'guest')
+    AND (
+      actor_type <> 'admin'
+      OR EXISTS (
+        SELECT 1 FROM public.admins a
+        WHERE lower(trim(a.email)) = lower(trim(auth.jwt() ->> 'email'))
+      )
+    )
   );
 
 DROP POLICY IF EXISTS "Only registered admins can view activity events" ON public.activity_events;
@@ -61,3 +68,54 @@ GRANT INSERT ON TABLE public.activity_events TO anon, authenticated;
 GRANT SELECT ON TABLE public.activity_events TO authenticated;
 
 -- Activity history is append-only for browser clients: no UPDATE or DELETE grants/policies.
+
+-- Do not trust a browser-supplied admin label on chat messages.
+-- Only an authenticated Supabase session whose email matches public.admins
+-- can create a message identified as an admin.
+CREATE OR REPLACE FUNCTION public.enforce_chat_sender_identity()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  admin_record record;
+BEGIN
+  IF NEW.sender_type = 'admin' THEN
+    SELECT id, name
+      INTO admin_record
+    FROM public.admins
+    WHERE lower(trim(email)) = lower(trim(auth.jwt() ->> 'email'))
+    LIMIT 1;
+
+    IF NOT FOUND THEN
+      NEW.sender_type := 'guest';
+      NEW.sender_name := 'Guest';
+      NEW.sender_kmpl_id := 'GUEST';
+      NEW.sender_id := NULL;
+      NEW.is_admin := false;
+    ELSE
+      NEW.sender_name := admin_record.name;
+      NEW.sender_id := admin_record.id::text;
+      NEW.is_admin := true;
+    END IF;
+  ELSIF NEW.sender_type = 'player_profile' THEN
+    -- Roster selection is not proof of identity. Never grant admin status.
+    NEW.is_admin := false;
+  ELSE
+    NEW.sender_type := 'guest';
+    NEW.sender_name := 'Guest';
+    NEW.sender_kmpl_id := 'GUEST';
+    NEW.sender_id := NULL;
+    NEW.is_admin := false;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS enforce_chat_sender_identity ON public.chat_messages;
+CREATE TRIGGER enforce_chat_sender_identity
+BEFORE INSERT ON public.chat_messages
+FOR EACH ROW
+EXECUTE FUNCTION public.enforce_chat_sender_identity();
