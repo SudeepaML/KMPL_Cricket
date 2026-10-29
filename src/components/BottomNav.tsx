@@ -28,6 +28,7 @@ export const BottomNav: React.FC = () => {
       { to: '/announcements', label: t.announcements, icon: Megaphone },
     ],
     player: [
+      { to: '/player/login', label: 'Player Login', icon: LockKeyhole },
       { to: '/directory', label: t.directory, icon: Users },
       { to: '/fund', label: t.monthlyFund, icon: Calendar },
       { to: '/baddi', label: t.baddiChitti, icon: CircleDollarSign },
