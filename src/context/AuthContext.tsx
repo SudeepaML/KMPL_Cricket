@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('kmpl_current_player');
+        const saved = sessionStorage.getItem('kmpl_current_player');
         return saved ? JSON.parse(saved) : null;
       } catch {
         return null;
@@ -51,14 +51,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginAsPlayer = (player: Player) => {
     setCurrentPlayer(player);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('kmpl_current_player', JSON.stringify(player));
+      sessionStorage.setItem('kmpl_current_player', JSON.stringify(player));
     }
   };
 
   const logoutPlayer = () => {
     setCurrentPlayer(null);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('kmpl_current_player');
+      sessionStorage.removeItem('kmpl_current_player');
     }
   };
 
