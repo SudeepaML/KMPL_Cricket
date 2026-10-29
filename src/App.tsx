@@ -7,8 +7,8 @@
  * unified single-instance RealtimeDataProvider, top navigation bar, and mobile thumb bottom bar.
  */
 
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -18,6 +18,8 @@ import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { DatabaseSettingsModal } from './components/DatabaseSettingsModal';
 import { AdminGuard } from './components/AdminGuard';
+import { useAuth } from './context/AuthContext';
+import { recordActivity, getActivitySessionId } from './lib/activity';
 
 // Pages
 import { DirectoryPage } from './pages/DirectoryPage';
@@ -33,6 +35,42 @@ import { AdminManagePage } from './pages/AdminManagePage';
 import { AdminRulesPage } from './pages/AdminRulesPage';
 import { CommunityChatPage } from './pages/CommunityChatPage';
 import { AnnouncementsPage } from './pages/AnnouncementsPage';
+import { AdminActivityPage } from './pages/AdminActivityPage';
+
+const WebsiteActivityTracker: React.FC = () => {
+  const location = useLocation();
+  const { currentAdmin, currentPlayer } = useAuth();
+
+  const actor = currentAdmin
+    ? { type: 'admin' as const, id: currentAdmin.id, name: currentAdmin.name }
+    : currentPlayer
+    ? { type: 'player_profile' as const, id: currentPlayer.id, name: currentPlayer.name }
+    : { type: 'guest' as const, id: null, name: 'Guest' };
+
+  useEffect(() => {
+    void recordActivity({
+      eventType: 'page_view',
+      path: location.pathname,
+      actor,
+    });
+  }, [location.pathname, currentAdmin?.id, currentPlayer?.id]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void recordActivity({
+        eventType: 'heartbeat',
+        path: window.location.pathname,
+        actor,
+      });
+    }, 60_000);
+    return () => window.clearInterval(interval);
+  }, [currentAdmin?.id, currentPlayer?.id]);
+
+  // Keep the session identifier initialized for the lifetime of this tab.
+  useEffect(() => { getActivitySessionId(); }, []);
+
+  return null;
+};
 
 export default function App() {
   const [isDbSettingsOpen, setIsDbSettingsOpen] = useState(false);
@@ -44,6 +82,7 @@ export default function App() {
           <AuthProvider>
             <RealtimeDataProvider>
               <BrowserRouter>
+                <WebsiteActivityTracker />
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-emerald-500 selection:text-white">
                   {/* Top Navigation Bar */}
                   <Header onOpenDbSettings={() => setIsDbSettingsOpen(true)} />
@@ -75,6 +114,7 @@ export default function App() {
                         <Route path="/admin/players" element={<AdminPlayersPage />} />
                         <Route path="/admin/admins" element={<AdminManagePage />} />
                         <Route path="/admin/rules" element={<AdminRulesPage />} />
+                        <Route path="/admin/activity" element={<AdminActivityPage />} />
                       </Route>
 
                       {/* Fallback */}
