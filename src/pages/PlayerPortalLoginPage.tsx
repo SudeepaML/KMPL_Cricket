@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { LockKeyhole, UserRound, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { db } from '../lib/database';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 
 export const PlayerPortalLoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { loginAsPlayer } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
   const [playerId, setPlayerId] = useState('');
@@ -66,7 +67,12 @@ export const PlayerPortalLoginPage: React.FC = () => {
       let player = selectedPlayer;
       if (!isFirstLogin && data.player) player = data.player as Player;
       loginAsPlayer(player);
-      navigate('/directory', { replace: true });
+      const requestedPath = searchParams.get('redirect') || '/directory';
+      // Only allow same-site paths to prevent open redirects.
+      const destination = requestedPath.startsWith('/') && !requestedPath.startsWith('//')
+        ? requestedPath
+        : '/directory';
+      navigate(destination, { replace: true });
     } catch (e) {
       const err = e as { message?: string; details?: string; hint?: string; code?: string };
       const message = [err?.message, err?.details, err?.hint].filter(Boolean).join(' ');
