@@ -40,8 +40,12 @@ import { PlayerPortalLoginPage } from './pages/PlayerPortalLoginPage';
 
 const PlayerPortalGuard: React.FC = () => {
   const { currentAdmin, currentPlayer, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <div className="p-8 text-center text-sm text-slate-500">Loading portal…</div>;
-  return currentAdmin || currentPlayer ? <Outlet /> : <Navigate to="/player/login" replace />;
+  const redirectTo = `${location.pathname}${location.search}${location.hash}`;
+  return currentAdmin || currentPlayer
+    ? <Outlet />
+    : <Navigate to={`/player/login?redirect=${encodeURIComponent(redirectTo)}`} replace />;
 };
 
 const WebsiteActivityTracker: React.FC = () => {
@@ -101,10 +105,10 @@ export default function App() {
                       <Route path="/" element={<Navigate to="/chat" replace />} />
 
                       {/* Player Portal Screens */}
-                      <Route path="/chat" element={<CommunityChatPage />} />
                       <Route path="/player/login" element={<PlayerPortalLoginPage />} />
-                      <Route path="/announcements" element={<AnnouncementsPage />} />
                       <Route element={<PlayerPortalGuard />}>
+                        <Route path="/chat" element={<CommunityChatPage />} />
+                        <Route path="/announcements" element={<AnnouncementsPage />} />
                         <Route path="/directory" element={<DirectoryPage />} />
                         <Route path="/fund" element={<MonthlyFundPage />} />
                         <Route path="/fund/:month" element={<MonthlyFundPage />} />
